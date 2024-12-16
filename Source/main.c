@@ -80,20 +80,6 @@ void main()
 						}
 					}
 				break;
-					
-				case 5:
-//					if(PowerOnCount < 31999)
-//					{
-//						PowerOnCount = 32000;
-//						if(KeyValue == 0x03)
-//						{
-//							if(KeyCount == 80 - 2)
-//							{
-//								BuzzerSet(2,100,100);
-//							}
-//						}
-//					}
-				break;
 			}
 		}
 	}
