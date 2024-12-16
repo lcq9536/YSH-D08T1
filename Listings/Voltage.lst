@@ -1,0 +1,31 @@
+C51 COMPILER V9.54   VOLTAGE                                                               12/16/2024 19:37:51 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE VOLTAGE
+OBJECT MODULE PLACED IN .\Objects\Voltage.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Source\Voltage.c OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\TouchKey) DEBUG 
+                    -PRINT(.\Listings\Voltage.lst) OBJECT(.\Objects\Voltage.obj)
+
+line level    source
+
+   1          #include <SH79F3212.h>
+   2          
+   3          #include "Voltage.h"
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

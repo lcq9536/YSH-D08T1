@@ -1,0 +1,16 @@
+".\Objects\main.obj",
+".\Objects\Buzzer.obj",
+".\Objects\Digital.obj",
+".\Objects\Key.obj",
+".\Objects\NTC.obj",
+".\Objects\Triac.obj",
+".\Objects\Voltage.obj",
+".\Objects\Timer.obj",
+".\Objects\MCU.obj",
+".\Objects\LED.obj",
+".\Objects\Work.obj",
+".\TouchKey\tk.LIB",
+".\Objects\tk_cfg.obj" 
+TO ".\Objects\YSH-D08E1" 
+
+PRINT(".\Listings\YSH-D08E1.map") REMOVEUNUSED 

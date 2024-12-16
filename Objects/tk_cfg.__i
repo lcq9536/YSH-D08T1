@@ -1,0 +1,1 @@
+"TouchKey\tk_cfg.c" OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(.\TouchKey) DEBUG PRINT(.\Listings\tk_cfg.lst) OBJECT(.\Objects\tk_cfg.obj)

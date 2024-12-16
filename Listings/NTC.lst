@@ -1,0 +1,180 @@
+C51 COMPILER V9.54   NTC                                                                   12/16/2024 19:37:50 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE NTC
+OBJECT MODULE PLACED IN .\Objects\NTC.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Source\NTC.c OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\TouchKey) DEBUG PRIN
+                    -T(.\Listings\NTC.lst) OBJECT(.\Objects\NTC.obj)
+
+line level    source
+
+   1          #include <intrins.h>
+   2          #include <SH79F3212.h>
+   3          
+   4          #include "NTC.h"
+   5          
+   6          unsigned int AD_Value = 0;
+   7          unsigned char Fileter_Cnt = 0;
+   8          unsigned int Temperature = 0;   //      储存最终温度值
+   9          unsigned int Last_Temperature = 0; // 上一次的温度值
+  10          
+  11          unsigned int code AD_Data[] = //上拉30k 100k的12位ntc
+  12          {
+  13                  3731,3714,3696,3677,3658,3638,3618,3597,3575,3553,//0-9
+  14                  3530,3506,3482,3457,3431,3405,3378,3350,3322,3293,//10-19
+  15                  3263,3233,3202,3171,3139,3106,3073,3039,3005,2970,//20-29
+  16                  2935,2900,2864,2827,2790,2753,2716,2678,2640,2602,//30-39
+  17                  2563,2524,2486,2447,2408,2369,2329,2290,2251,2212,//40-49
+  18                  2173,2134,2096,2057,2019,1981,1943,1905,1868,1831,//50-59
+  19                  1794,1758,1722,1686,1651,1616,1582,1548,1515,1482,//60-69
+  20                  1449,1417,1386,1355,1324,1294,1265,1236,1208,1180,//70-79
+  21                  1152,1125,1099,1073,1048,1023,999 ,975 ,952 ,929 ,//80-89
+  22                  906 ,885 ,863 ,842 ,822 ,802 ,783 ,764 ,745 ,727 ,//90-99
+  23                  709 ,692 ,675 ,659 ,642 ,627 ,611 ,597 ,582 ,568  //100-110
+  24          };
+  25          
+  26          unsigned int ADC_Read()
+  27          {
+  28   1              unsigned char i = 100;
+  29   1              unsigned int Temp = 0;  //      储存临时AD值
+  30   1              
+  31   1              P3CR &= 0xf7;   //      配置输入模式
+  32   1              
+  33   1              ADCON = 0x00;   //      关闭AD,清AD中断标志位,关闭比较中断,清AD转换结束标志位
+  34   1              ADT = 0xef;             //      ADC采样周期为32*(1/16.6M)，采样时间为15个采样周期，总转换时间为27个采样周期，约52us一次转
+             -换
+  35   1              
+  36   1              ADC1H = 0x00;
+  37   1              ADC2H = 0x88;   //      P3.3作为ADC输入口,开启1.25V基准源
+  38   1      
+  39   1              ADCON =  0x97;  //      第11个通道并启用ADC和ADC转换
+  40   1              
+  41   1              while(ADCON & 0x01 && i --)     // 等待ADC转换结束同时如果ADC转换卡了100次就释放
+  42   1              {
+  43   2                      _nop_();
+  44   2                      RSTSTAT = 0x02;
+  45   2              }
+  46   1              
+  47   1              Temp = (unsigned int)ADDH;      //      数据整合12位
+  48   1              Temp <<= 4;
+  49   1              Temp += (unsigned int)ADDL;
+  50   1              
+  51   1              return Temp;
+  52   1      }
+  53          
+C51 COMPILER V9.54   NTC                                                                   12/16/2024 19:37:50 PAGE 2   
+
+  54          /**
+  55            * @Brief      ADC读取通道数据
+  56            * @Param  None
+  57            * @Note   None
+  58            * @RetVal     None
+  59            */
+  60          void AD_Deal(unsigned int Temp)
+  61          {
+  62   1              unsigned char Cnt = 0;  // 通道采集数据个数
+  63   1              
+  64   1              unsigned int Temp_Max = 0;      //      最大AD值
+  65   1              unsigned int Temp_Min = 0;
+  66   1              unsigned int Temp_Sum = 0;
+  67   1              
+  68   1              if(!Cnt)        //      刚开始采集
+  69   1              {
+  70   2                      Temp_Max = Temp;
+  71   2                      Temp_Min = Temp;
+  72   2              }
+  73   1              if(Temp > Temp_Max)     Temp_Max = Temp;        //      后面采集到的数据大于之前的最大值                
+  74   1              else if(Temp < Temp_Min) Temp_Min = Temp;
+  75   1              
+  76   1              Temp_Sum += Temp;       //      统计采集数据之和
+  77   1              
+  78   1              Cnt ++;
+  79   1              if(Cnt >= 10)   //      采集50个数据
+  80   1              {
+  81   2                      Cnt = 0;
+  82   2                      AD_Value = (Temp_Sum - Temp_Max - Temp_Min) / 8;        //      滑动平均算法
+  83   2                      Temp_Sum = 0;
+  84   2              }
+  85   1      }
+  86          
+  87          /**
+  88            * @Brief      查表法将AD值转化成对应的温度
+  89            * @Param  None
+  90            * @Note   None
+  91            * @RetVal     放大十倍的温度
+  92            */
+  93          unsigned int AD_To_Temperature(unsigned int Value)
+  94          {
+  95   1              unsigned char i = 0;    //      索引
+  96   1              unsigned int Ret_Temp = 0;
+  97   1              unsigned int Temp = AD_Data[0]; //      最大AD值
+  98   1              
+  99   1              if(Value < AD_Data[55]) i = 55; //      取中值比较,Value索引起点为55
+ 100   1              else i = 0;                                             //      Value索引最小值为0
+ 101   1              
+ 102   1              while(Value <= Temp)    //      寻找第一个小于Value的值,此时i指向下一个数据
+ 103   1              {
+ 104   2                      Temp = AD_Data[i];
+ 105   2                      i ++;
+ 106   2              }
+ 107   1              
+ 108   1              if(i > 101) Ret_Temp = 100;     //      最大温度值为100°
+ 109   1              else if(i == 0) Ret_Temp = 0;   //      最小温度值为0°
+ 110   1              else Ret_Temp = i - 1 + (Value - AD_Data[i - 1]) / (AD_Data[i - 2] - AD_Data[i - 1]);
+ 111   1              
+ 112   1              if(Ret_Temp > 100)      Ret_Temp = 100;
+ 113   1              
+ 114   1              return Ret_Temp;
+ 115   1      }
+C51 COMPILER V9.54   NTC                                                                   12/16/2024 19:37:50 PAGE 3   
+
+ 116          
+ 117          /**
+ 118            * @Brief      迟滞滤波,更新滤波数据
+ 119            * @Param  Value:传感器温度数据
+ 120            * @Note   确保温度上升是真实有效的，而不是由于噪声引起
+ 121            * @RetVal     滤波后数据
+ 122            */
+ 123          void Temperature_Deal(unsigned int Value)
+ 124          {
+ 125   1              if(Value == Last_Temperature)   Fileter_Cnt = 0;
+ 126   1              else if(Value >= Last_Temperature)      //      当前传感器数据大于上次存储的数据
+ 127   1              {
+ 128   2                      Fileter_Cnt &= 0x0f;    //      低位记录大于次数
+ 129   2                      Fileter_Cnt ++;
+ 130   2                      if(Fileter_Cnt > 10)    //      大于次数超过10次
+ 131   2                      {
+ 132   3                              Fileter_Cnt = 0;
+ 133   3                              Temperature = Value;    //      更新储存传感器数据
+ 134   3                      }
+ 135   2              }
+ 136   1              else    //      当前传感器数据小于上次存储的数据
+ 137   1              {
+ 138   2                      Fileter_Cnt &= 0xf0;    //      高位记录小于次数
+ 139   2                      Fileter_Cnt += 0x10;
+ 140   2                      if(Fileter_Cnt > 0xa0)  //      大于次数超过10次
+ 141   2                      {
+ 142   3                              Fileter_Cnt = 0;
+ 143   3                              Temperature = Value;    //      更新储存传感器数据
+ 144   3                      }
+ 145   2              }
+ 146   1              Last_Temperature = Value;       //      保存上一次温度值
+ 147   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    400    ----
+   CONSTANT SIZE    =    220    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      7       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,81 @@
+C51 COMPILER V9.54   MCU                                                                   12/16/2024 19:37:51 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MCU
+OBJECT MODULE PLACED IN .\Objects\MCU.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Source\MCU.c OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\TouchKey) DEBUG PRIN
+                    -T(.\Listings\MCU.lst) OBJECT(.\Objects\MCU.obj)
+
+line level    source
+
+   1          #include <SH79F3212.h>
+   2          
+   3          #include "MCU.h"
+   4          
+   5          /**
+   6            * @Brief      SH79F3212芯片初始化
+   7            * @Param  None
+   8            * @Note   根据芯片手册设置各个端口
+   9            * @RetVal     None
+  10            */
+  11          void MCU_Init()
+  12          {
+  13   1              // 配置寄存器时，首先要切换到寄存器所在页
+  14   1              INSCON  = 0x00; // 分页0
+  15   1              
+  16   1              EA              = 0;    // 关闭全局中断
+  17   1              
+  18   1              CLKCON  = 0x00; // 不分频，32.768khz作为OSCSLK
+  19   1              
+  20   1              RSTSTAT = 0x02;
+  21   1              
+  22   1              //      P0.0:SegA/LED5  P0.1:COM2       P0.2:COM3       P0.3:SegE
+  23   1              P0CR    = 0xff;
+  24   1              P0PCR   = 0x00;
+  25   1              P0              = 0x00;
+  26   1              P0_1    = 1;
+  27   1              P0_2    = 1;
+  28   1              
+  29   1              //      P1.0:SegD/LED7  P1.1:SegDP/LED4 P1.2:COM0       P1.7:K1
+  30   1              P1CR    = 0xff;
+  31   1              P1PCR   = 0x00;
+  32   1              P1              = 0x00;
+  33   1              P1_2    = 1;
+  34   1              
+  35   1              DISPCON = 0x05; // 共阴极，P1.0作为IO口
+  36   1              P1OS    = 0x02; // 开漏输出，内部上拉电阻
+  37   1              
+  38   1              //      P2.0:K2                 P2.1:SegC/LED6  P2.2:SegG/LED3
+  39   1              //      P2.3:SegF/LED2  P2.4:SegB               P2.5:K3         P2.6:GVChk
+  40   1              P2CR    = 0x9f;
+  41   1              P2PCR   = 0x00;
+  42   1              P2              = 0x00;
+  43   1              
+  44   1              //      P3.3:NTC and Beep       P3.4:COM1       P3.6:Triac
+  45   1              P3CR    = 0xff;
+  46   1              P3PCR   = 0x00;
+  47   1              P3              = 0x00;
+  48   1              P3_4    = 1;
+  49   1              
+  50   1              EA              = 1;
+  51   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.54   MCU                                                                   12/16/2024 19:37:51 PAGE 2   
+
+   CODE SIZE        =     55    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

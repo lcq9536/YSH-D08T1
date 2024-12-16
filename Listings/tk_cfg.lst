@@ -1,0 +1,476 @@
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE TK_CFG
+OBJECT MODULE PLACED IN .\Objects\tk_cfg.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE TouchKey\tk_cfg.c OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\TouchKey) DEBUG
+                    - PRINT(.\Listings\tk_cfg.lst) OBJECT(.\Objects\tk_cfg.obj)
+
+line level    source
+
+   1          #include        <intrins.h>
+   2          #include        <ABSACC.h>
+   3          #include        <SH79F3212.h>
+   4          
+   5          #include        "tk.h" 
+   6          
+   7          //===============================================================================================
+   8          //                                                      ÖÐÓ± SH79F3212 ÏµÁÐ´¥Ãþ¿â V2.0
+   9          //                                                      -----------------------------
+  10          //                                                                      ´¥Ãþ°´¼ü³ÌÐò                                                            
+  11          //      
+  12          //===============================================================================================
+  13          
+  14          #pragma message "²»ÄÜÖ§³ÖÊÖÖ±½ÓÃþ"
+*** MESSAGE C286 IN LINE 14 OF TouchKey\tk_cfg.c: ²»ÄÜÖ§³ÖÊÖÖ±½ÓÃþ
+  15          
+  16          #ifdef  TEST_TK_DATA    
+                      #pragma message "´ò¿ª´®¿Úµ÷ÊÔ ²¨ÌØÂÊ100000bps"                          
+              #else   
+  19                  #pragma message "¹Ø±Õ´®¿Úµ÷ÊÔ"                                  
+*** MESSAGE C286 IN LINE 19 OF TouchKey\tk_cfg.c: ¹Ø±Õ´®¿Úµ÷ÊÔ
+  20          #endif
+  21                                                                                                                                                                                  
+  22                                                                                                                                                                                  
+  23          #define     TK_VREF_SEL_2P5V            TKVREF = (TKVREF & 0x3F);
+  24          #define     TK_VREF_SEL_2V              TKVREF = (TKVREF & 0x3F) | 0x40;
+  25          #define     TK_VREF_SEL_1P5V            TKVREF = (TKVREF & 0x3F) | 0x80;
+  26          #define     TK_VREF_SEL_1V              TKVREF = (TKVREF & 0x3F) | 0xC0;
+  27          
+  28          #define     TK_CMP_Delay_4SCK           TKVREF = (TKVREF & 0xCF);
+  29          #define     TK_CMP_Delay_8SCK           TKVREF = (TKVREF & 0xCF) | 0x10;
+  30          #define     TK_CMP_Delay_16SCK          TKVREF = (TKVREF & 0xCF) | 0x20;
+  31          #define     TK_CMP_Delay_32SCK          TKVREF = (TKVREF & 0xCF) | 0x30;
+  32          
+  33          #define     TK_OP_SEL_4V                    TKVREF = (TKVREF & 0xF3);
+  34          #define     TK_OP_SEL_3V                    TKVREF = (TKVREF & 0xF3) | 0x04;
+  35          #define     TK_OP_SEL_2P5V          TKVREF = (TKVREF & 0xF3) | 0x08;
+  36          #define     TK_OP_SEL_2V                    TKVREF = (TKVREF & 0xF3) | 0x0C;
+  37          
+  38          #define     TK_Dischg_128SCK            TKVREF = (TKVREF & 0xFC);
+  39          #define     TK_Dischg_256SCK            TKVREF = (TKVREF & 0xFC) | 0x01;
+  40          #define     TK_Dischg_384SCK            TKVREF = (TKVREF & 0xFC) | 0x02;
+  41          #define     TK_Dischg_512SCK            TKVREF = (TKVREF & 0xFC) | 0x03;
+  42          
+  43          extern  unsigned char   xdata KEY_NUMBER;                                       //°´¼ü¸öÊý(ÓÃ»§ÉèÖÃ)
+  44          extern  unsigned char   xdata HF_VALUE;                                         //¸ßÆµÆµÂÊ
+  45          extern  unsigned char   xdata HF_TKVREF;                                        //¸ßÆµµçÑ¹
+  46          extern  unsigned char   xdata LF_VALUE;                                         //µÍÆµÆµÂÊ
+  47          extern  unsigned char   xdata LF_TKVREF;                                        //µÍÆµµçÑ¹
+  48          extern  unsigned char   code  HF_DIV4[MAX_KEY];                                 //¸ßÆµ·Å´ó±¶Êý
+  49          extern  unsigned char   code  LF_DIV4[MAX_KEY];                                 //µÍÆµ·Å´ó±¶Êý
+  50          extern  unsigned char   code  Tab_TKChn[MAX_KEY];                               //Í¨µÀºÅ
+  51          extern  unsigned int    code  Tab_TKMax[MAX_KEY*2];                             //·§Öµ
+  52          
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 2   
+
+  53          #define         FREQ_4_15M                      4                       //2.89 -- 5.8
+  54          #define         FREQ_3_32M                      5                       //4  -- 7.5
+  55          #define         FREQ_2_76M                      6                       //5.37 -- 9.13
+  56          #define         FREQ_2_37M                      7                       //6.5 -- 10.6
+  57          #define         FREQ_2_075M                     8                       //7.21 -- 12.13
+  58          #define         FREQ_1_84M                      9
+  59          #define         FREQ_1_66M                      10
+  60          #define         FREQ_1_50M                      11
+  61          #define         FREQ_1_38M                      12
+  62          #define         FREQ_1_27M                      13
+  63          #define         FREQ_1_18M                      14
+  64          #define         FREQ_1_1K                       15
+  65          #define         FREQ_1_0375K            16
+  66          #define         FREQ_976K                       17
+  67          #define         FREQ_922K                       18
+  68          
+  69          #define KEY1_OUT_L      {P1_7 = 0;      P1CR  |=  bt7;}         
+  70          #define KEY2_OUT_L      {P2_0 = 0;      P2CR  |=  bt0;} //<<--3
+  71          #define KEY3_OUT_L      {P2_1 = 0;      P2CR  |=  bt1;}
+  72          #define KEY4_OUT_L      {P2_2 = 0;      P2CR  |=  bt2;}         //<<--4
+  73          #define KEY5_OUT_L      {P2_3 = 0;      P2CR  |=  bt3;}         //<<--2
+  74          #define KEY6_OUT_L      {P2_4 = 0;      P2CR  |=  bt4;}
+  75          #define KEY7_OUT_L      {P2_5 = 0;      P2CR  |=  bt5;}
+  76          #define KEY8_OUT_L      {P2_6 = 0;      P2CR  |=  bt6;}                 //<<--1
+  77          
+  78          #define CX_OUT_L         {P2_7 = 0;     P2CR   |=  bt7;}        
+  79                                                    //8¸ö°´¼ü                                     //Ô¤Áô4¸ö
+  80          
+  81          #define CH0_Pin23       0
+  82          #define CH1_Pin24       1
+  83          #define CH2_Pin25       2
+  84          #define CH3_Pin26       3
+  85          #define CH4_Pin27       4
+  86          #define CH5_Pin28       5
+  87          #define CH6_Pin1        6
+  88          #define CH7_Pin2        7
+  89          
+  90          unsigned char   code  Tab_TKChn[8] =    {
+  91                   CH0_Pin23,
+  92                   CH1_Pin24,     //      0x02
+  93                   CH6_Pin1       //      0x04
+  94          };                                                                       //(***)
+  95          
+  96           
+  97          unsigned char   code  HF_DIV4[MAX_KEY]   = {3,3,3,3,3,3,3,3,};                                                                   //(***µ÷Õû·Å´ó±¶Êý£¬ÓÐÍâ¿Ç²âÊÔÊ±ËùÓÐ
+             -°´¼ü±ä»¯Á¿ÔÚ350~450Ö®¼ä)
+  98          unsigned char   code  LF_DIV4[MAX_KEY]   = {3,3,3,3,3,3,3,3,};                                                           //(***µ÷Õû·Å´ó±¶Êý£¬ÓÐÍâ¿Ç²âÊÔÊ±ËùÓÐ°
+             -´¼ü±ä»¯Á¿ÔÚ350~450Ö®¼ä)
+  99          unsigned int    code  Tab_TKMax[MAX_KEY*2] = {500,500,500,500,500,500,500,500,                   //¸ô×ÅÃæ°åÃþ ³õ°æÈ«²¿500
+ 100                                                        500,500,500,500,500,500,500,500,};        
+ 101          unsigned int    code  Tab_HanTouch[MAX_KEY*2] = {1000,1000,1000,1000,1000,1000,1000,1000,                //ÓÃÊÖÖ±½ÓÃþ
+ 102                                                           1000,1000,1000,1000,1000,1000,1000,1000, };
+ 103          
+ 104          
+ 105          
+ 106          void    InitKey(void)
+ 107          {
+ 108   1              unsigned char i;
+ 109   1      
+ 110   1              KEY_NUMBER = 3;                                                                         //(***)
+ 111   1              SHARE_NUMBER = 0;                                                                       //(***)
+ 112   1              FLAG_COUNT = 2;                                                                         //°´¼üÈ·ÈÏ´ÎÊý 8ms*2(¸ßµÍË«Æµ)*(FLAG_COUNT) = ms
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 3   
+
+ 113   1                      
+ 114   1              HF_VALUE =FREQ_2_37M;                                                                                                                                                     //(***)       
+ 115   1          HF_TKVREF = TK_VREF_SEL_2V + TK_CMP_Delay_32SCK +  TK_OP_SEL_4V + TK_Dischg_512SCK;                           //(***)
+ 116   1      
+ 117   1              LF_VALUE =FREQ_1_18M;                                                                                                                                                     //(***)       
+ 118   1              LF_TKVREF =TK_VREF_SEL_1V + TK_CMP_Delay_32SCK +  TK_OP_SEL_4V + TK_Dischg_512SCK;                                        //(***)
+ 119   1      
+ 120   1              gBPatch1 = 0;                                                                           //(***)                                                                                                                                 
+ 121   1              gBPatch2 = 1;                                                                           //ÊÖÖ±½ÓÃþÒ»¸ö¼ü£¬È»ºó²ÅÍ¨5V²¹¶¡
+ 122   1              gBPatch3 = 1;                                                                           //Ö§³ÖÊÖÖ±½ÓÃþ
+ 123   1              
+ 124   1              CLKCON = 0;     
+ 125   1              _nop_();
+ 126   1              _nop_();
+ 127   1              _nop_();
+ 128   1              _nop_();
+ 129   1              
+ 130   1              for(i=0;i<KEY_NUMBER;i++)
+ 131   1              {
+ 132   2                      switch(Tab_TKChn[i])
+ 133   2                      {
+ 134   3                              case 0:         KEY1_OUT_L              break;             
+ 135   3                              case 1:         KEY2_OUT_L              break;             
+ 136   3                              case 2:         KEY3_OUT_L              break;             
+ 137   3                              case 3:         KEY4_OUT_L              break;             
+ 138   3                              case 4:         KEY5_OUT_L              break;             
+ 139   3                              case 5:         KEY6_OUT_L              break;             
+ 140   3                              case 6:         KEY7_OUT_L              break;             
+ 141   3                              case 7:         KEY8_OUT_L              break;             
+ 142   3                      }       
+ 143   2              }                                                                                                                                                                 //(***)       
+ 144   1      
+ 145   1              CX_OUT_L
+ 146   1      
+ 147   1       //SH79f3212    Òþ²Ø¼Ä´æÆ÷ÅäÖÃ
+ 148   1              #if (PACKAGE==  SH79F3212_28PIN)
+ 149   1      #pragma message "SH79F3212----28PIN"            
+*** MESSAGE C286 IN LINE 149 OF TouchKey\tk_cfg.c: SH79F3212----28PIN
+ 150   1                      P1       &= (~(bt3+bt4+bt5+bt6));
+ 151   1                      P1CR |=   (bt3+bt4+bt5+bt6) ;
+ 152   1      
+ 153   1                      P3       &= (~(bt5));
+ 154   1                      P3CR |=   (bt5) ;
+ 155   1      
+ 156   1                      INSCON |= 0x40;
+ 157   1                      P4       &= (~(bt0+bt1+bt2+bt3));
+ 158   1                      P4CR |=   (bt0+bt1+bt2+bt3) ;
+ 159   1                      INSCON &= 0xBF;                                          
+ 160   1              #endif
+ 161   1      
+ 162   1              #if (PACKAGE==  SH79F3212_20PIN)
+              #pragma message "SH79F3212----20PIN"            
+                              P1       &= (~(bt1+bt2+bt3+bt4+bt5+bt6));
+                              P1CR |=   (bt1+bt2+bt3+bt4+bt5+bt6) ;
+              
+                              P2       &= (~(bt3));
+                              P2CR |=   (bt3) ;
+              
+                              P3       &= (~(bt0+bt1+bt3+bt4+bt5));
+                              P3CR |=   (bt0+bt1+bt3+bt4+bt5) ;
+              
+                              INSCON |= 0x40;
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 4   
+
+                              P4       &= (~(bt0+bt1+bt2+bt3));
+                              P4CR |=   (bt0+bt1+bt2+bt3) ;
+                              INSCON &= 0xBF;         
+                      #endif
+ 178   1      
+ 179   1              reset_TK();
+ 180   1      }
+ 181          
+ 182          
+ 183          unsigned int    KeyRead;         
+ 184          unsigned char   gBKeyValidFg;
+ 185          unsigned int    gWRestT;
+ 186          unsigned int    gWFailT;
+ 187          
+ 188          unsigned int    Key_DataInput(void)
+ 189          {
+ 190   1              unsigned int    val;
+ 191   1              
+ 192   1              gBKeyValidFg = 1;
+ 193   1      
+ 194   1              val = key_value;
+ 195   1      
+ 196   1              switch(val)                                                                                                                       //(***)
+ 197   1              {        
+ 198   2                      //Ö§³ÖµÄ°´¼üÖµ
+ 199   2                      case 0x0000:    
+ 200   2                      case 0x0001:     //TK1
+ 201   2                      case 0x0002:     //TK2
+ 202   2                      case 0x0004:     //TK3
+ 203   2                      case 0x0008:     //TK4
+ 204   2                      case 0x0010:     //TK5
+ 205   2                      case 0x0020:     //TK6
+ 206   2                      case 0x0040:     //TK7
+ 207   2                      case 0x0080:     //TK8          
+ 208   2                      case 0x0003:     //TK1+TK2
+ 209   2                      //Ö§³ÖµÄ×éºÏÖµ
+ 210   2                      //TBD
+ 211   2                                      return val;
+ 212   2                      
+ 213   2                      default:        gBKeyValidFg = 0; return 0xffff;
+ 214   2              }       
+ 215   1      }
+ 216          
+ 217          unsigned int    catchKey(void)
+ 218          {
+ 219   1              KeyRead =  Key_DataInput();
+ 220   1      
+ 221   1              //10ms
+ 222   1              if(gBKeyValidFg == 0)
+ 223   1              {         
+ 224   2                      //·Ç·¨¼ü1.8s¸´Î»        
+ 225   2                      gWRestT = 0;
+ 226   2      
+ 227   2                      if((++gWFailT)>=180)            //1.8s          
+ 228   2                      {
+ 229   3                              gWFailT = 0;
+ 230   3                              reset_TK();
+ 231   3      
+ 232   3                              KeyRead = 0;
+ 233   3                      }
+ 234   2              }
+ 235   1              else if(KeyRead!=0)
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 5   
+
+ 236   1              {
+ 237   2                      //³¤°´36s¸´Î»
+ 238   2                      gWFailT = 0;
+ 239   2      
+ 240   2                      if((++gWRestT)>=3600)           //36s           
+ 241   2                      {
+ 242   3                              gWRestT = 0;
+ 243   3                              reset_TK();     
+ 244   3      
+ 245   3                              KeyRead = 0;
+ 246   3                      }
+ 247   2              }
+ 248   1              else
+ 249   1              {
+ 250   2                      //ÎÞ¼ü
+ 251   2                      gWRestT = 0;
+ 252   2                      gWFailT = 0;
+ 253   2              }
+ 254   1          //-----------------------------------------------------------
+ 255   1              return KeyRead;
+ 256   1      }
+ 257          
+ 258          extern  void    test(void);
+ 259          
+ 260          void tkRound(void)
+ 261          {
+ 262   1                      static unsigned char time;
+ 263   1              
+ 264   1                      if(++time>= (TK_SCAN_PERIOD/2))
+ 265   1                      {
+ 266   2                              time =0;
+ 267   2                              catchKey();                                     /* ´¥Ãþµ÷ÓÃ2£º¼üÖµÓë·À¿¨ */             // °´¼ü»ñÈ¡Óë·À¿¨
+ 268   2                              stop_scan_tk();                                         /* ´¥Ãþµ÷ÓÃ3£º´¥ÃþÉ¨Ãè */       
+ 269   2                              #ifdef  TEST_TK_DATA
+                                              UART_Txd_TKDEBUG();                             /* ´¥Ãþµ÷ÓÃ4£º´¥Ãþ´®¿ÚÊý¾Ý */
+                                      #endif /* TEST_TK_DATA */               
+ 272   2                      }
+ 273   1                      else
+ 274   1                      {
+ 275   2                              SanTk();                                                                /* ´¥Ãþµ÷ÓÃ5£º´¥Ãþ´¦Àí */
+ 276   2                              SanTk();
+ 277   2                      }
+ 278   1                      //      test();
+ 279   1      }
+ 280          
+ 281          void TK_Interrupt (void) interrupt  0
+ 282          {
+ 283   1              TK_Isr ();
+ 284   1      }
+ 285          
+ 286          
+ 287          #ifdef  TEST_TK_DATA
+              unsigned char   xdata           gBUartSendFg;
+              bit             gbUartTran;
+              unsigned char   xdata   gBUartLen;
+              unsigned char   xdata   gBUartTotalByte;
+              unsigned char   xdata   gBUartBuf[(MAX_KEY+1)*8+3];              //×î´óÖ§³Ö12KEY,ÔÙÔö¼ÓÒ»¸ö¼ÙÍ¨µÀ
+              extern  unsigned int   xdata key_baseline[MAX_KEY*2];                   //»ù×¼Öµ
+              extern  unsigned int   xdata key_pre[MAX_KEY*2];                        //»ù×¼Öµ
+              extern  unsigned char  xdata freqForDataMsg;                            //µ±Ç°´¦ÀíÊý¾Ý¶ÔÓ¦µÄÆµÂÊ                        
+              extern  unsigned char  xdata freqForKeyJudge;                           //µ±Ç°ÓÃÓÚÅÐ¶Ï°´¼üÊ¹ÓÃµÄÆµÂÊ
+              extern  unsigned int   xdata key_value;                                         //½á¹û  
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 6   
+
+              extern  unsigned int   xdata key_RawAd[MAX_KEY*2];      
+              extern  unsigned char   xdata key_RawTouch[MAX_KEY*2];
+              
+              void UARTRxD_Interrupt(void) interrupt 4
+              {
+                      _push_(FLASHCON);
+                      _push_(INSCON);
+                      INSCON = 0;
+                      FLASHCON = 0;
+              
+                if(RI)
+                      {
+                              RI= 0;          
+                      }
+                      if(TI)
+                      {               
+                              TI = 0;
+                              if(gbUartTran)
+                              {
+                                      if(gBUartLen <gBUartTotalByte   )
+                                      {
+                                              SBUF    =       gBUartBuf[gBUartLen];                           
+                                              gBUartLen++;
+                                      }
+                                      else
+                                      {
+                                              gbUartTran      = 0;
+                                      }       
+                              }
+                      }
+                      _pop_(INSCON);
+                      _pop_(FLASHCON);
+              }
+              
+              
+              
+              void    UART_INIT(void)
+              {       
+                      P1_0= 1;                           //TXD
+                      P1CR |= bt0;
+                      
+                      SFINE   =       6;                                                      //16.6M/(10*16+6) = 50000bps
+                      SBRTL   =       (32768-10)&0xff;
+                      SBRTH   =       (((32768-10)>>8)&0xff) | 0x80;
+                      SCON = 0x40;
+                      REN = 0;                        //Ö»·¢ËÍ²»½Ó
+                      
+                      ES = 1;
+              }
+              
+              
+              //Ò»´ÎÐÔ·¢ËÍÄ£Ê½
+              
+              extern  unsigned char   xdata key_count[MAX_KEY*2];
+              
+              void UART_Txd_TKDEBUG(void)
+              {               
+                      unsigned char i,j,k,x;
+                      unsigned int sample,base;
+              
+              
+              #ifdef  TEST_HIGH_DATA  
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 7   
+
+                      #pragma message "´®¿Ú·¢ËÍ¸ßÆµÖµ"                                
+                      if( freqForDataMsg != MAX_KEY) //12±íÊ¾¸ßÆµ
+                      {
+                              return;
+                      }       
+              #endif
+              
+              #ifdef  TEST_LOW_DATA   
+                      #pragma message "´®¿Ú·¢ËÍµÍÆµÖµ"                                
+                      if( freqForDataMsg != 0) //12±íÊ¾¸ßÆµ
+                      {
+                              return;
+                      }       
+              #endif
+              
+              
+                      if(gbUartTran == 0)
+                      {
+                              x = 0;
+                              gBUartBuf[x++] = 0x69;
+              
+                      //      gBUartBuf[x++] = ((KEY_NUMBER  )<<3)+1;         //1.Õý³£Ä£Ê½
+                              gBUartBuf[x++] = ((KEY_NUMBER+1)<<3)+1;         //2.Ôö¼ÓÒ»¸ö¼ÙÍ¨µÀ£¬·¢ËÍÊ±¼ä
+                      //      for(k = 0;k< KEY_NUMBER;   k++)                         //1.Õý³£Ä£Ê½
+                              for(k = 0;k<(KEY_NUMBER+1);k++)                         //2.Ôö¼ÓÒ»¸ö¼ÙÍ¨µÀ£¬·¢ËÍÊ±¼ä
+                              {               
+                                      if(k==KEY_NUMBER)
+                                      {
+                                              sample =key_value;                                      //µ±Ç°·¢µÄÕâÒ»±ÊÊý¾ÝÊôÓÚÄÄÒ»¸öÆµÂÊ
+                                              base =  freqForKeyJudge;                                //µ±Ç°ÓÃÄÄ¸öÆµÂÊÈ·ÈÏ°´¼ü                
+                                      }       
+                                      else
+                                      {
+                                              sample = key_RawAd[k+freqForDataMsg] ;           // ´¥ÃþÔ­Ê¼Êý¾Ý
+                                      //      sample = key_pre[k+freqForDataMsg]  ;
+                                              base   = key_baseline[k+freqForDataMsg]  ;  //´¥Ãþ»ù×¼Öµ                                                        
+                                      //      sample = base   = key_RawTouch[k+freqForDataMsg];
+                                      //      base   = key_count[k+freqForDataMsg]  ;  //´¥Ãþ»ù×¼Öµ                                           
+                                              if(base==0)
+                                              {
+                                                      sample=0;
+                                              }       
+                                      }
+              
+                                      gBUartBuf[x++] = 0x02;
+                                      gBUartBuf[x++] = k;             
+                                      gBUartBuf[x++] = (base>>8)&0xff;        
+                                      gBUartBuf[x++] = (base)&0xff;
+                                                      
+                                      gBUartBuf[x++] = 0x12;
+                                      gBUartBuf[x++] = k;             
+                                      gBUartBuf[x++] = (sample>>8)&0xff;              
+                                      gBUartBuf[x++] = (sample)&0xff;
+                              }
+                                                      
+                              for(i=0,j=0;i<x;i++)
+                              {
+                                      j+= gBUartBuf[i];
+                              }
+                              gBUartBuf[x++] = j;
+                              gBUartLen = 0;
+                              gBUartTotalByte = x;
+C51 COMPILER V9.54   TK_CFG                                                                12/16/2024 19:37:51 PAGE 8   
+
+                                                      
+                              gbUartTran = 1;
+                              
+                              TI = 1;
+                      }
+              }
+              
+              #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    484    ----
+   CONSTANT SIZE    =     88    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
