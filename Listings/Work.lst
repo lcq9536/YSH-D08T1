@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   WORK                                                                  12/17/2024 10:44:24 PAGE 1   
+C51 COMPILER V9.54   WORK                                                                  12/17/2024 20:27:57 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE WORK
@@ -10,15 +10,114 @@ line level    source
 
    1          #include <SH79F3212.h>
    2          
-   3          #include "Work.h"
+   3          #include "LED.h"
+   4          #include "Key.h"
+   5          #include "Buzzer.h"
+   6          #include "Digital.h"
+   7          #include "NTC.h"
+   8          #include "Triac.h"
+   9          #include "Work.h"
+  10          
+  11          bool Scroll_Flag = false;
+  12          unsigned char PowerOnCount1 = 0;        //      上电计数
+  13          unsigned char PowerOnCount2 = 0;        //      上电计数
+  14          //      系统状态:0-上电状态、1-待机状态、2-自检状态、3-报警状态、4-选择状态、5-工作状态
+  15          unsigned char Sys_Mode = 1;
+  16          
+  17          bool NTCShort = false;
+  18          bool NTCOpen = false;
+  19          bool DryBoil = false;
+  20          
+  21          unsigned char ScrollPos = 0;            //      数码管轮播索引
+  22          unsigned char ScrollCounter = 0;        //      数码管轮播计数
+  23          unsigned int xdata ScrollData[11][3] = {        //      数码管轮播数组
+  24                  {10,0,0},{11,1,1},{12,2,2},{13,3,3},{14,4,4},{15,5,5},
+  25                  {16,6,6},{17,7,7},{18,8,8},{19,9,9},{22,0,0}
+  26          };
+  27          
+  28          /**
+  29            * @Brief      待机模式
+  30            * @Param  None
+  31            * @Note   None
+  32            * @RetVal     None
+  33            */
+  34          void StandbyMode()
+  35          {
+  36   1              PowerOnCount1 ++;
+  37   1              if(PowerOnCount1 > 49 && Sys_Mode == 1)
+  38   1              {
+  39   2                      PowerOnCount1 = 50;
+  40   2                      DigitalSet(10,0,0);
+  41   2                      LedSet(0,0x00,0);
+  42   2                      BuzzerSet(0,0,0);
+  43   2                      TriacSet(0,0,0,0);
+  44   2                      if(KeyValue == 0x01)
+  45   2                      {
+  46   3                              Sys_Mode = 2;
+  47   3                      }
+  48   2              }
+  49   1      }
+  50          
+  51          /**
+  52            * @Brief      自检模式
+  53            * @Param  None
+  54            * @Note   None
+C51 COMPILER V9.54   WORK                                                                  12/17/2024 20:27:57 PAGE 2   
+
+  55            * @RetVal     None
+  56            */
+  57          void CheckMode()
+  58          {
+  59   1              PowerOnCount2 ++;
+  60   1              if(PowerOnCount2 < 199)
+  61   1              {
+  62   2                      if(KeyValue == 0x03)
+  63   2                      {
+  64   3                              Sys_Mode = 2;   //      自检状态
+  65   3                              if(KeyCount == 80 - 2)
+  66   3                              {
+  67   4                                      BuzzerSet(2,100,100);
+  68   4                                      TriacSet(4,6,0,10);
+  69   4                                      DigitalSet(10,0,0);
+  70   4                                      Scroll_Flag = true;     //      开启数码管轮播
+  71   4                              }
+  72   3                      }
+  73   2              }
+  74   1              else PowerOnCount2 = 200;       //      钳住，上电4秒内
+  75   1              
+  76   1              if(Scroll_Flag)
+  77   1              {
+  78   2                      ScrollCounter ++;
+  79   2                      if(ScrollCounter > 49)
+  80   2                      {
+  81   3                              ScrollCounter = 0;
+  82   3                              ScrollPos ++;
+  83   3                              if(ScrollPos < 11)
+  84   3                              {
+  85   4                                      DigitalSet(ScrollData[ScrollPos][0],
+  86   4                                              ScrollData[ScrollPos][1],ScrollData[ScrollPos][2]);
+  87   4                              }
+  88   3                              else if(ScrollPos == 11)
+  89   3                              {
+  90   4                                      DigitalSet(Temperature/10%10,Temperature%10+10,20);
+  91   4                              }
+  92   3                              else
+  93   3                              {
+  94   4                                      ScrollPos = 0;
+  95   4                                      Sys_Mode = 1;   //      切换待机状态
+  96   4                                      Scroll_Flag = 0;        //      关闭轮播
+  97   4                              }
+  98   3                      }
+  99   2              }
+ 100   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   ----    ----
+   CODE SIZE        =    270    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =   ----    ----
+   XDATA SIZE       =     66    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =   ----    ----
+   DATA SIZE        =      9    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
    EDATA SIZE       =   ----    ----

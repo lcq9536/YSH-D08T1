@@ -8,28 +8,20 @@
 #include "Key.h"
 #include "LED.h"
 #include "Timer.h"
+#include "Work.h"
 #include "tk.h"
 #include "MCU.h"
 #include "Digital.h"
 
 bool Flag = false;	//	LED和数码管分时共用
-bool Scroll_Flag = false;
+bool ErrorFlag = true;	//	异常标志位
 
 unsigned char Sys_Count = 0;	//	系统计时
 unsigned char Sys_State = 0;	//	状态机选择位
 
-//	系统状态:0-上电状态、1-待机状态、2-自检状态、3-报警状态、4-选择状态、5-工作状态
-unsigned char Sys_Mode = 1;
+unsigned char FlashCount = 0;	//	数码管闪烁计数
+unsigned char ErrorCount = 0;	//	错误计数
 
-unsigned int PowerOnCount1 = 0;	//	上电计数
-unsigned int PowerOnCount2 = 0;	//	上电计数
-
-unsigned int xdata ScrollData[11][3] = {
-	{10,0,0},{11,1,1},{12,2,2},{13,3,3},{14,4,4},{15,5,5},
-	{16,6,6},{17,7,7},{18,8,8},{19,9,9},{21,0,0}
-};
-unsigned char ScrollPos = 0;	//	数码管轮播索引
-unsigned int ScrollCounter = 0;	//	数码管轮播计数
 
 void main()
 {
@@ -38,7 +30,7 @@ void main()
 	InitKey();
 	BuzzerSet(1,1000,300);
 	LedSet(2,0x7f,0xff);
-	DigitalSet(23,23,23);
+	DigitalSet(24,24,24);
 	while(1)
 	{
 		RSTSTAT = 0x02;
@@ -75,62 +67,80 @@ void main()
 					}
 				break;
 					
-				case 4:	//	待机状态
-					PowerOnCount1 ++;
-					if(PowerOnCount1 > 49 && Sys_Mode == 1)
-					{
-						PowerOnCount1 = 8000;
-						DigitalSet(10,0,0);
-						LedSet(0,0x00,0);
-						BuzzerSet(0,0,0);
-						TriacSet(0,0,0,0);
-						if(KeyValue == 0x01)
-						{
-							Sys_Mode = 2;
-						}
-					}
+				case 4:	
+					StandbyMode();	//	待机状态
 				break;
 					
-				case 5:	//	自检状态
-					PowerOnCount2 ++;
-					if(PowerOnCount2 < 199)
+				case 5:
+					CheckMode();	//	自检状态
+				break;
+					
+				case 6:	//报警状态
+					FlashCount ++;
+					if(FlashCount >= 50) FlashCount = 0;
+					
+					if(Buzzer_State != 1)
 					{
-						if(KeyValue == 0x03)
+						if(AD_Value < 80)	//	短路195℃
 						{
-							Sys_Mode = 2;	//	自检状态
-							if(KeyCount == 80 - 2)
+							ErrorCount ++;
+							if(ErrorCount > 25)
 							{
-								BuzzerSet(2,100,100);
-								TriacSet(4,6,0,10);
-								DigitalSet(10,0,0);
-								Scroll_Flag = true;	//	开启数码管轮播
+								ErrorCount = 0;
+								Sys_Mode = 3;
+								
+								LedSet(0,0x00,0);
+								BuzzerSet(3,300,300);
+								TriacSet(0,0,0,0);
+								
+								if(FlashCount < 25) DigitalSet(21,0,1);	//	E01
+								else DigitalSet(23,23,23);
 							}
 						}
-					}
-					else PowerOnCount2 = 200;
-					
-					if(Scroll_Flag)
-					{
-						ScrollCounter ++;
-						if(ScrollCounter > 49)
+						if(Sys_Mode == 5 && AD_Value < 100)	//	干烧185℃
 						{
-							ScrollCounter = 0;
-							ScrollPos ++;
-							if(ScrollPos < 11)
+							ErrorCount ++;
+							if(ErrorCount > 25)
 							{
-								DigitalSet(ScrollData[ScrollPos][0],
-									ScrollData[ScrollPos][1],ScrollData[ScrollPos][2]);
+								ErrorCount = 0;
+								Sys_Mode = 3;	//	报警状态
+								if(ErrorFlag)
+								{
+									ErrorFlag = false;
+									LedSet(0,0x00,0);
+									BuzzerSet(3,300,300);
+									TriacSet(0,0,0,0);
+								}
+								if(FlashCount < 25) DigitalSet(21,0,0);	//E00
+								else DigitalSet(23,23,23);
 							}
-							else if(ScrollPos == 11)
+						}
+						else if(AD_Value > 3965)	//开路-20℃
+						{
+							ErrorCount ++;
+							if(ErrorCount > 25)
 							{
-								DigitalSet(Temperature/10%10,Temperature%10+10,20);
+								ErrorCount = 0;
+								Sys_Mode = 3;
+								if(ErrorFlag)
+								{
+									ErrorFlag = false;
+									LedSet(0,0x00,0);
+									BuzzerSet(3,300,300);
+									TriacSet(0,0,0,0);
+								}
+								
+								if(FlashCount < 25) DigitalSet(10,0,0);	//	000
+								else if(FlashCount >= 25) DigitalSet(23,23,23);
 							}
-							else
-							{
-								ScrollPos = 0;
-								Sys_Mode = 1;	//	切换待机状态
-								Scroll_Flag = 0;	//	关闭轮播
-							}
+						}
+						if(Sys_Mode == 3 && AD_Value > 709 && AD_Value < 3530)
+						{
+							NTCOpen = false;
+							NTCShort = false;
+							DryBoil = false;
+							ErrorFlag = true;
+							Sys_Mode = 1;	//	切换待机状态
 						}
 					}
 				break;

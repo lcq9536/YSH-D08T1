@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   NTC                                                                   12/17/2024 10:44:23 PAGE 1   
+C51 COMPILER V9.54   NTC                                                                   12/17/2024 20:27:56 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE NTC
@@ -62,10 +62,10 @@ line level    source
   51   1              return Temp;
   52   1      }
   53          
-C51 COMPILER V9.54   NTC                                                                   12/17/2024 10:44:23 PAGE 2   
+C51 COMPILER V9.54   NTC                                                                   12/17/2024 20:27:56 PAGE 2   
 
   54          /**
-  55            * @Brief      ADC读取通道数据
+  55            * @Brief      AD滤波
   56            * @Param  None
   57            * @Note   None
   58            * @RetVal     None
@@ -126,7 +126,7 @@ line level    source
  113   1              
  114   1              return Ret_Temp;
  115   1      }
-C51 COMPILER V9.54   NTC                                                                   12/17/2024 10:44:23 PAGE 3   
+C51 COMPILER V9.54   NTC                                                                   12/17/2024 20:27:56 PAGE 3   
 
  116          
  117          /**

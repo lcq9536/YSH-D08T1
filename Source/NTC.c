@@ -52,7 +52,7 @@ unsigned int ADC_Read()
 }
 
 /**
-  * @Brief	ADC读取通道数据
+  * @Brief	AD滤波
   * @Param  None
   * @Note   None
   * @RetVal	None
