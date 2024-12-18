@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   WORK                                                                  12/17/2024 20:27:57 PAGE 1   
+C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE WORK
@@ -27,97 +27,207 @@ line level    source
   17          bool NTCShort = false;
   18          bool NTCOpen = false;
   19          bool DryBoil = false;
-  20          
-  21          unsigned char ScrollPos = 0;            //      数码管轮播索引
-  22          unsigned char ScrollCounter = 0;        //      数码管轮播计数
-  23          unsigned int xdata ScrollData[11][3] = {        //      数码管轮播数组
-  24                  {10,0,0},{11,1,1},{12,2,2},{13,3,3},{14,4,4},{15,5,5},
-  25                  {16,6,6},{17,7,7},{18,8,8},{19,9,9},{22,0,0}
-  26          };
-  27          
-  28          /**
-  29            * @Brief      待机模式
-  30            * @Param  None
-  31            * @Note   None
-  32            * @RetVal     None
-  33            */
-  34          void StandbyMode()
-  35          {
-  36   1              PowerOnCount1 ++;
-  37   1              if(PowerOnCount1 > 49 && Sys_Mode == 1)
-  38   1              {
-  39   2                      PowerOnCount1 = 50;
-  40   2                      DigitalSet(10,0,0);
-  41   2                      LedSet(0,0x00,0);
-  42   2                      BuzzerSet(0,0,0);
-  43   2                      TriacSet(0,0,0,0);
-  44   2                      if(KeyValue == 0x01)
+  20          bool ErrorFlag = true;  //      异常标志位
+  21          
+  22          unsigned char FlashCount = 0;   //      数码管闪烁计数
+  23          unsigned char ErrorCount = 0;   //      错误计数
+  24          unsigned char PressCount = 0;   //      功能键按下次数
+  25          
+  26          unsigned char ScrollPos = 0;            //      数码管轮播索引
+  27          unsigned char ScrollCounter = 0;        //      数码管轮播计数
+  28          unsigned int xdata ScrollData[11][3] = {        //      数码管轮播数组
+  29                  {10,0,0},{11,1,1},{12,2,2},{13,3,3},{14,4,4},{15,5,5},
+  30                  {16,6,6},{17,7,7},{18,8,8},{19,9,9},{22,0,0}
+  31          };
+  32          
+  33          /**
+  34            * @Brief      待机模式
+  35            * @Param  None
+  36            * @Note   None
+  37            * @RetVal     None
+  38            */
+  39          void StandbyMode()
+  40          {
+  41   1              if(Sys_Mode == 1)
+  42   1              {
+  43   2                      if(PowerOnCount1 <= 49) PowerOnCount1 ++;
+  44   2                      else
   45   2                      {
-  46   3                              Sys_Mode = 2;
-  47   3                      }
-  48   2              }
-  49   1      }
-  50          
-  51          /**
-  52            * @Brief      自检模式
-  53            * @Param  None
-  54            * @Note   None
-C51 COMPILER V9.54   WORK                                                                  12/17/2024 20:27:57 PAGE 2   
+  46   3                              PowerOnCount1 = 50;
+  47   3                              DigitalSet(10,0,0);
+  48   3                              LedSet(0,0x00,0);
+  49   3                              BuzzerSet(0,0,0);
+  50   3                              TriacSet(0,0,0,0);
+  51   3                              //      松手触发
+  52   3                      }
+  53   2              }
+  54   1      }
+C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 2   
 
-  55            * @RetVal     None
-  56            */
-  57          void CheckMode()
-  58          {
-  59   1              PowerOnCount2 ++;
-  60   1              if(PowerOnCount2 < 199)
-  61   1              {
-  62   2                      if(KeyValue == 0x03)
-  63   2                      {
-  64   3                              Sys_Mode = 2;   //      自检状态
-  65   3                              if(KeyCount == 80 - 2)
-  66   3                              {
-  67   4                                      BuzzerSet(2,100,100);
-  68   4                                      TriacSet(4,6,0,10);
-  69   4                                      DigitalSet(10,0,0);
-  70   4                                      Scroll_Flag = true;     //      开启数码管轮播
-  71   4                              }
-  72   3                      }
-  73   2              }
-  74   1              else PowerOnCount2 = 200;       //      钳住，上电4秒内
-  75   1              
-  76   1              if(Scroll_Flag)
-  77   1              {
-  78   2                      ScrollCounter ++;
-  79   2                      if(ScrollCounter > 49)
-  80   2                      {
-  81   3                              ScrollCounter = 0;
-  82   3                              ScrollPos ++;
-  83   3                              if(ScrollPos < 11)
-  84   3                              {
-  85   4                                      DigitalSet(ScrollData[ScrollPos][0],
-  86   4                                              ScrollData[ScrollPos][1],ScrollData[ScrollPos][2]);
-  87   4                              }
-  88   3                              else if(ScrollPos == 11)
-  89   3                              {
-  90   4                                      DigitalSet(Temperature/10%10,Temperature%10+10,20);
-  91   4                              }
-  92   3                              else
-  93   3                              {
-  94   4                                      ScrollPos = 0;
-  95   4                                      Sys_Mode = 1;   //      切换待机状态
-  96   4                                      Scroll_Flag = 0;        //      关闭轮播
-  97   4                              }
-  98   3                      }
-  99   2              }
- 100   1      }
+  55          
+  56          /**
+  57            * @Brief      自检模式
+  58            * @Param  None
+  59            * @Note   None
+  60            * @RetVal     None
+  61            */
+  62          void CheckMode()
+  63          {
+  64   1              if(Sys_Mode != 3)
+  65   1              {
+  66   2                      PowerOnCount2 ++;
+  67   2                      if(PowerOnCount2 < 199)
+  68   2                      {
+  69   3                              if(KeyValue == 0x03)
+  70   3                              {
+  71   4                                      Sys_Mode = 2;   //      自检状态
+  72   4                                      if(KeyCount == 80 - 2)
+  73   4                                      {
+  74   5                                              BuzzerSet(2,100,100);
+  75   5                                              TriacSet(4,6,0,10);
+  76   5                                              DigitalSet(10,0,0);
+  77   5                                              Scroll_Flag = true;     //      开启数码管轮播
+  78   5                                      }
+  79   4                              }
+  80   3                      }
+  81   2                      else PowerOnCount2 = 200;       //      钳住，上电4秒内
+  82   2              
+  83   2                      if(Scroll_Flag)
+  84   2                      {
+  85   3                              ScrollCounter ++;
+  86   3                              if(ScrollCounter > 49)
+  87   3                              {
+  88   4                                      ScrollCounter = 0;
+  89   4                                      ScrollPos ++;
+  90   4                                      if(ScrollPos < 11)
+  91   4                                      {
+  92   5                                              DigitalSet(ScrollData[ScrollPos][0],
+  93   5                                                      ScrollData[ScrollPos][1],ScrollData[ScrollPos][2]);
+  94   5                                      }
+  95   4                                      else if(ScrollPos == 11)
+  96   4                                      {
+  97   5                                              DigitalSet(Temperature/10%10,Temperature%10+10,20);
+  98   5                                      }
+  99   4                                      else
+ 100   4                                      {
+ 101   5                                              ScrollPos = 0;
+ 102   5                                              Sys_Mode = 1;   //      切换待机状态
+ 103   5                                              Scroll_Flag = 0;        //      关闭轮播
+ 104   5                                      }
+ 105   4                              }
+ 106   3                      }
+ 107   2              }
+ 108   1      }
+ 109          
+ 110          /**
+ 111            * @Brief      报警状态
+ 112            * @Param  None
+ 113            * @Note   None
+ 114            * @RetVal     None
+ 115            */
+ 116          void AlarmMode()
+C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 3   
+
+ 117          {
+ 118   1              FlashCount ++;
+ 119   1              if(FlashCount >= 50) FlashCount = 0;
+ 120   1              
+ 121   1              if(Buzzer_State != 1)
+ 122   1              {
+ 123   2                      if(AD_Value < 80 || //  短路195℃
+ 124   2                              (NTCShort && AD_Value < (DryBoil?100:709)))     //      恢复过程
+ 125   2                      {
+ 126   3                              ErrorCount ++;
+ 127   3                              if(ErrorCount > 25)
+ 128   3                              {
+ 129   4                                      ErrorCount = 0;
+ 130   4                                      NTCShort = true;
+ 131   4                                      Sys_Mode = 3;
+ 132   4                                      
+ 133   4                                      if(FlashCount < 25) DigitalSet(21,0,1); //      E01
+ 134   4                                      else DigitalSet(23,23,23);
+ 135   4                                      if(ErrorFlag)   //      下面操作只执行一次
+ 136   4                                      {
+ 137   5                                              ErrorFlag = false;
+ 138   5                                              LedSet(0,0x00,0);
+ 139   5                                              BuzzerSet(3,300,300);
+ 140   5                                              TriacSet(0,0,0,0);
+ 141   5                                      }
+ 142   4                              }
+ 143   3                      }
+ 144   2                      else if((Sys_Mode == 5 && AD_Value < 100 && AD_Value > 80) //   工作干烧185℃
+ 145   2                              || (DryBoil && AD_Value > 80 && AD_Value < 709))        //      恢复过程
+ 146   2                      {
+ 147   3                              ErrorCount ++;
+ 148   3                              if(ErrorCount > 25)
+ 149   3                              {
+ 150   4                                      ErrorCount = 0;
+ 151   4                                      DryBoil = true;
+ 152   4                                      Sys_Mode = 3;
+ 153   4                                      
+ 154   4                                      if(FlashCount < 25) DigitalSet(21,0,0); //      E00
+ 155   4                                      else DigitalSet(23,23,23);
+ 156   4                                      if(ErrorFlag)
+ 157   4                                      {
+ 158   5                                              ErrorFlag = false;
+ 159   5                                              LedSet(0,0x00,0);
+ 160   5                                              BuzzerSet(3,300,300);
+ 161   5                                              TriacSet(0,0,0,0);
+ 162   5                                      }
+ 163   4                              }
+ 164   3                      }
+ 165   2                      else if(AD_Value > 3965 || //开路-20℃
+ 166   2                              (NTCOpen && AD_Value > 3530 && AD_Value < 3965))        //      恢复过程
+ 167   2                      {
+ 168   3                              ErrorCount ++;
+ 169   3                              if(ErrorCount > 25)
+ 170   3                              {
+ 171   4                                      ErrorCount = 0;
+ 172   4                                      NTCOpen = true;
+ 173   4                                      Sys_Mode = 3;
+ 174   4                                      
+ 175   4                                      if(FlashCount < 25) DigitalSet(10,0,0); //      000
+ 176   4                                      else if(FlashCount >= 25) DigitalSet(23,23,23);
+ 177   4                                      if(ErrorFlag)
+ 178   4                                      {
+C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 4   
+
+ 179   5                                              ErrorFlag = false;
+ 180   5                                              DigitalSet(10,0,0);
+ 181   5                                              LedSet(0,0x00,0);
+ 182   5                                              BuzzerSet(3,300,300);
+ 183   5                                              TriacSet(0,0,0,0);
+ 184   5                                      }
+ 185   4                              }
+ 186   3                      }
+ 187   2                      else if(Sys_Mode == 3 && AD_Value > 709 && AD_Value < 3530)
+ 188   2                      {
+ 189   3                              NTCOpen = false;
+ 190   3                              NTCShort = false;
+ 191   3                              DryBoil = false;
+ 192   3                              ErrorFlag = true;
+ 193   3                              Sys_Mode = 1;   //      切换待机状态
+ 194   3                      }
+ 195   2              }
+ 196   1      }
+ 197          
+ 198          void SelectMode()
+ 199          {
+ 200   1              
+ 201   1      }
+ 202          
+ 203          void WorkMode()
+ 204          {
+ 205   1              
+ 206   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    270    ----
+   CODE SIZE        =    657    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     66    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =      9    ----
+   DATA SIZE        =     13    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
    EDATA SIZE       =   ----    ----

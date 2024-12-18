@@ -129,25 +129,57 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>96</LineNumber>
+          <LineNumber>55</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>-16772510</Address>
+          <Address>-16769580</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>Source\main.c</Filename>
+          <Filename>Source\Buzzer.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\unnamed\MAIN\96</Expression>
+          <Expression>\\unnamed\BUZZER\55</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>137</LineNumber>
+          <LineNumber>43</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>-16772300</Address>
+          <Address>-16769636</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>Source\Buzzer.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\unnamed\BUZZER\43</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>45</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>-16768902</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>Source\Key.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\unnamed\KEY\45</Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>62</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>-16772615</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -156,7 +188,23 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>Source\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\unnamed\MAIN\137</Expression>
+          <Expression>\\unnamed\MAIN\62</Expression>
+        </Bp>
+        <Bp>
+          <Number>4</Number>
+          <Type>0</Type>
+          <LineNumber>64</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>-16772597</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>Source\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\unnamed\MAIN\64</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -168,12 +216,7 @@
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Temperature,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>2</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>AD_Value,0x0A</ItemText>
+          <ItemText>FlashCount,0x0A</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

@@ -12,5 +12,8 @@ extern bool DryBoil;
 
 void StandbyMode();
 void CheckMode();
+void AlarmMode();
+void SelectMode();
+void WorkMode();
 
 #endif

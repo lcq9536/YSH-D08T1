@@ -57,7 +57,7 @@ unsigned int ADC_Read()
   * @Note   None
   * @RetVal	None
   */
-void AD_Deal(unsigned int Temp)
+ void AD_Deal(unsigned int Temp)
 {
 	unsigned char Cnt = 0;	// 通道采集数据个数
 	
@@ -95,19 +95,21 @@ unsigned int AD_To_Temperature(unsigned int Value)
 	unsigned char i = 0;	//	索引
 	unsigned int Ret_Temp = 0;
 	unsigned int Temp = AD_Data[0];	//	最大AD值
+
+	if(Value < AD_Data[109]) Value = AD_Data[109];	//	防while卡死
 	
 	if(Value < AD_Data[55])	i = 55;	//	取中值比较,Value索引起点为55
 	else i = 0;						//	Value索引最小值为0
 	
-	while(Value <= Temp)	//	寻找第一个小于Value的值,此时i指向下一个数据
-	{
+	while(Value <= Temp)	//	寻找第一个小于等于Value的Temp值,此时i指向下一个数据
+	{						//	Value值比AD_Data数组最小元素都小，导致卡死在此
 		Temp = AD_Data[i];
 		i ++;
 	}
 	
 	if(i > 101) Ret_Temp = 100;	//	最大温度值为100°
-	else if(i == 0) Ret_Temp = 0;	//	最小温度值为0°
-	else Ret_Temp = i - 1 + (Value - AD_Data[i - 1]) / (AD_Data[i - 2] - AD_Data[i - 1]);
+	else if(i == 0) Ret_Temp = 0;	//	找不到比Value小的AD值
+	else Ret_Temp = i - 1;
 	
 	if(Ret_Temp > 100)	Ret_Temp = 100;
 	
