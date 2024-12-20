@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   TRIAC                                                                 12/18/2024 18:51:41 PAGE 1   
+C51 COMPILER V9.54   TRIAC                                                                 12/20/2024 09:37:12 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE TRIAC
@@ -62,7 +62,7 @@ line level    source
   52            * @Note   None
   53            * @RetVal     None
   54            */
-C51 COMPILER V9.54   TRIAC                                                                 12/18/2024 18:51:41 PAGE 2   
+C51 COMPILER V9.54   TRIAC                                                                 12/20/2024 09:37:12 PAGE 2   
 
   55          void TriacSet(unsigned char OnTime,unsigned char OffTime,
   56                  unsigned char SkipCycles, unsigned char TotalCycles)

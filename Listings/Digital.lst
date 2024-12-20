@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   DIGITAL                                                               12/18/2024 18:51:41 PAGE 1   
+C51 COMPILER V9.54   DIGITAL                                                               12/20/2024 09:37:12 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE DIGITAL
@@ -25,95 +25,96 @@ line level    source
   15                  0x6d,0x7d,0x07,0x7f,0x6f,       // 5~9
   16                  0xbf,0x86,0xdb,0xcf,0xe6,       // 0~4,带DP
   17                  0xed,0xfd,0x87,0xff,0xef,       // 5~9,带DP
-  18                  0x39,0xf9,0xbe,0x00,0xff        // C,E,U,熄灭,全亮
-  19          }; 
-  20          
-  21          void Digital_Clear()
-  22          {
-  23   1              COM0 = 1;
-  24   1              COM1 = 1;
-  25   1              COM2 = 1;
-  26   1              COM3 = 1;
-  27   1      }   
-  28          /**
-  29            * @Brief      数码管静态显示函数
-  30            * @Param  Num1、Num2、Num3显示数据
-  31            * @Note   None
-  32            * @RetVal     None
-  33            */
-  34          void Digital_Display(unsigned char Num1,unsigned char Num2,unsigned char Num3)
-  35          {
-  36   1              Digital_Clear();
-  37   1              
-  38   1              Digital_Num ++;
-  39   1              if(Digital_Num >= 4) Digital_Num = 0;
-  40   1      
-  41   1              if(Digital_Num == 1)
-  42   1              {
-  43   2                      SEGA    = Digital_Table[Num1] & 0x01 ? 1 : 0;
-  44   2                      SEGB    = Digital_Table[Num1] & 0x02 ? 1 : 0;
-  45   2                      SEGC    = Digital_Table[Num1] & 0x04 ? 1 : 0;
-  46   2                      SEGD    = Digital_Table[Num1] & 0x08 ? 1 : 0;
-  47   2                      SEGE    = Digital_Table[Num1] & 0x10 ? 1 : 0;
-  48   2                      SEGF    = Digital_Table[Num1] & 0x20 ? 1 : 0;
-  49   2                      SEGG    = Digital_Table[Num1] & 0x40 ? 1 : 0;
-  50   2                      SEGDP   = Digital_Table[Num1] & 0x80 ? 1 : 0;
-  51   2                      
-  52   2                      COM1 = 0;
-  53   2                      COM2 = 1;
-  54   2                      COM3 = 1;
-C51 COMPILER V9.54   DIGITAL                                                               12/18/2024 18:51:41 PAGE 2   
+  18                  0x39,0xf9,0xbe,0xc0,0x40,       // C,E,U,-:,-
+  19                  0x00,0xff                                       // 熄灭,全亮
+  20          }; 
+  21          
+  22          void Digital_Clear()
+  23          {
+  24   1              COM0 = 1;
+  25   1              COM1 = 1;
+  26   1              COM2 = 1;
+  27   1              COM3 = 1;
+  28   1      }   
+  29          /**
+  30            * @Brief      数码管静态显示函数
+  31            * @Param  Num1、Num2、Num3显示数据
+  32            * @Note   None
+  33            * @RetVal     None
+  34            */
+  35          void Digital_Display(unsigned char Num1,unsigned char Num2,unsigned char Num3)
+  36          {
+  37   1              Digital_Clear();
+  38   1              
+  39   1              Digital_Num ++;
+  40   1              if(Digital_Num >= 4) Digital_Num = 0;
+  41   1      
+  42   1              if(Digital_Num == 1)
+  43   1              {
+  44   2                      SEGA    = Digital_Table[Num1] & 0x01 ? 1 : 0;
+  45   2                      SEGB    = Digital_Table[Num1] & 0x02 ? 1 : 0;
+  46   2                      SEGC    = Digital_Table[Num1] & 0x04 ? 1 : 0;
+  47   2                      SEGD    = Digital_Table[Num1] & 0x08 ? 1 : 0;
+  48   2                      SEGE    = Digital_Table[Num1] & 0x10 ? 1 : 0;
+  49   2                      SEGF    = Digital_Table[Num1] & 0x20 ? 1 : 0;
+  50   2                      SEGG    = Digital_Table[Num1] & 0x40 ? 1 : 0;
+  51   2                      SEGDP   = Digital_Table[Num1] & 0x80 ? 1 : 0;
+  52   2                      
+  53   2                      COM1 = 0;
+  54   2                      COM2 = 1;
+C51 COMPILER V9.54   DIGITAL                                                               12/20/2024 09:37:12 PAGE 2   
 
-  55   2              }
-  56   1              else if(Digital_Num == 2)
-  57   1              {
-  58   2                      SEGA    = Digital_Table[Num2] & 0x01 ? 1 : 0;
-  59   2                      SEGB    = Digital_Table[Num2] & 0x02 ? 1 : 0;
-  60   2                      SEGC    = Digital_Table[Num2] & 0x04 ? 1 : 0;
-  61   2                      SEGD    = Digital_Table[Num2] & 0x08 ? 1 : 0;
-  62   2                      SEGE    = Digital_Table[Num2] & 0x10 ? 1 : 0;
-  63   2                      SEGF    = Digital_Table[Num2] & 0x20 ? 1 : 0;
-  64   2                      SEGG    = Digital_Table[Num2] & 0x40 ? 1 : 0;
-  65   2                      SEGDP   = Digital_Table[Num2] & 0x80 ? 1 : 0;
-  66   2                      
-  67   2                      COM1 = 1;
-  68   2                      COM2 = 0;
-  69   2                      COM3 = 1;
-  70   2              }
-  71   1              else if(Digital_Num == 3)
-  72   1              {
-  73   2                      SEGA    = Digital_Table[Num3] & 0x01 ? 1 : 0;
-  74   2                      SEGB    = Digital_Table[Num3] & 0x02 ? 1 : 0;
-  75   2                      SEGC    = Digital_Table[Num3] & 0x04 ? 1 : 0;
-  76   2                      SEGD    = Digital_Table[Num3] & 0x08 ? 1 : 0;
-  77   2                      SEGE    = Digital_Table[Num3] & 0x10 ? 1 : 0;
-  78   2                      SEGF    = Digital_Table[Num3] & 0x20 ? 1 : 0;
-  79   2                      SEGG    = Digital_Table[Num3] & 0x40 ? 1 : 0;
-  80   2                      SEGDP   = Digital_Table[Num3] & 0x80 ? 1 : 0;
-  81   2                      
-  82   2                      COM1 = 1;
-  83   2                      COM2 = 1;
-  84   2                      COM3 = 0;
-  85   2              }
-  86   1      }
-  87          
-  88          /**
-  89            * @Brief      数码管设置函数
-  90            * @Param  Num1、Num2、Num3:显示数字
-  91            * @Note   None
-  92            * @RetVal     None
-  93            */
-  94          void DigitalSet(unsigned char Num1,unsigned char Num2,unsigned char Num3)
-  95          {
-  96   1              Digital_Num1 = Num1;
-  97   1              Digital_Num2 = Num2;
-  98   1              Digital_Num3 = Num3;
-  99   1      }
+  55   2                      COM3 = 1;
+  56   2              }
+  57   1              else if(Digital_Num == 2)
+  58   1              {
+  59   2                      SEGA    = Digital_Table[Num2] & 0x01 ? 1 : 0;
+  60   2                      SEGB    = Digital_Table[Num2] & 0x02 ? 1 : 0;
+  61   2                      SEGC    = Digital_Table[Num2] & 0x04 ? 1 : 0;
+  62   2                      SEGD    = Digital_Table[Num2] & 0x08 ? 1 : 0;
+  63   2                      SEGE    = Digital_Table[Num2] & 0x10 ? 1 : 0;
+  64   2                      SEGF    = Digital_Table[Num2] & 0x20 ? 1 : 0;
+  65   2                      SEGG    = Digital_Table[Num2] & 0x40 ? 1 : 0;
+  66   2                      SEGDP   = Digital_Table[Num2] & 0x80 ? 1 : 0;
+  67   2                      
+  68   2                      COM1 = 1;
+  69   2                      COM2 = 0;
+  70   2                      COM3 = 1;
+  71   2              }
+  72   1              else if(Digital_Num == 3)
+  73   1              {
+  74   2                      SEGA    = Digital_Table[Num3] & 0x01 ? 1 : 0;
+  75   2                      SEGB    = Digital_Table[Num3] & 0x02 ? 1 : 0;
+  76   2                      SEGC    = Digital_Table[Num3] & 0x04 ? 1 : 0;
+  77   2                      SEGD    = Digital_Table[Num3] & 0x08 ? 1 : 0;
+  78   2                      SEGE    = Digital_Table[Num3] & 0x10 ? 1 : 0;
+  79   2                      SEGF    = Digital_Table[Num3] & 0x20 ? 1 : 0;
+  80   2                      SEGG    = Digital_Table[Num3] & 0x40 ? 1 : 0;
+  81   2                      SEGDP   = Digital_Table[Num3] & 0x80 ? 1 : 0;
+  82   2                      
+  83   2                      COM1 = 1;
+  84   2                      COM2 = 1;
+  85   2                      COM3 = 0;
+  86   2              }
+  87   1      }
+  88          
+  89          /**
+  90            * @Brief      数码管设置函数
+  91            * @Param  Num1、Num2、Num3:显示数字
+  92            * @Note   None
+  93            * @RetVal     None
+  94            */
+  95          void DigitalSet(unsigned char Num1,unsigned char Num2,unsigned char Num3)
+  96          {
+  97   1              Digital_Num1 = Num1;
+  98   1              Digital_Num2 = Num2;
+  99   1              Digital_Num3 = Num3;
+ 100   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =    322    ----
-   CONSTANT SIZE    =     25    ----
+   CONSTANT SIZE    =     27    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =      4    ----

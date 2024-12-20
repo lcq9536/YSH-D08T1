@@ -9,6 +9,7 @@ unsigned int KeyValue = 0;			//	键值
 unsigned char KeyCount = 0;		//	按键按下时间计数
 unsigned char LongKey_Flag = 0;	//	长按短按标志位
 unsigned int Last_KeyValue = 0;	//	一个扫描周期内的旧键值
+unsigned int Last_KeyCode = 0;		//	一个完整按键动作的旧键值
 
 /**
   * @Brief	判断键值
@@ -42,9 +43,13 @@ void Key_Handle()
 	{
 		if(KeyCount < 254) KeyCount ++;	//	20ms+1
 	}
-	else if(!KeyValue)
+	else if(!KeyValue)	//	扫描到按键松开
 	{
 		KeyCount = 0;
-		Last_KeyValue = 0;
+		if(Last_KeyValue)//	上一次有键值就判断为第一次松开
+		{
+			Last_KeyCode = Last_KeyValue;	//	保存上次松开时键值
+			Last_KeyValue = 0;
+		}
 	}
 }

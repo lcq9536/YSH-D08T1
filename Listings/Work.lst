@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 1   
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE WORK
@@ -28,206 +28,445 @@ line level    source
   18          bool NTCOpen = false;
   19          bool DryBoil = false;
   20          bool ErrorFlag = true;  //      异常标志位
-  21          
-  22          unsigned char FlashCount = 0;   //      数码管闪烁计数
-  23          unsigned char ErrorCount = 0;   //      错误计数
-  24          unsigned char PressCount = 0;   //      功能键按下次数
-  25          
-  26          unsigned char ScrollPos = 0;            //      数码管轮播索引
-  27          unsigned char ScrollCounter = 0;        //      数码管轮播计数
-  28          unsigned int xdata ScrollData[11][3] = {        //      数码管轮播数组
-  29                  {10,0,0},{11,1,1},{12,2,2},{13,3,3},{14,4,4},{15,5,5},
-  30                  {16,6,6},{17,7,7},{18,8,8},{19,9,9},{22,0,0}
-  31          };
-  32          
-  33          /**
-  34            * @Brief      待机模式
-  35            * @Param  None
-  36            * @Note   None
-  37            * @RetVal     None
-  38            */
-  39          void StandbyMode()
-  40          {
-  41   1              if(Sys_Mode == 1)
-  42   1              {
-  43   2                      if(PowerOnCount1 <= 49) PowerOnCount1 ++;
-  44   2                      else
-  45   2                      {
-  46   3                              PowerOnCount1 = 50;
-  47   3                              DigitalSet(10,0,0);
-  48   3                              LedSet(0,0x00,0);
-  49   3                              BuzzerSet(0,0,0);
-  50   3                              TriacSet(0,0,0,0);
-  51   3                              //      松手触发
-  52   3                      }
-  53   2              }
-  54   1      }
-C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 2   
+  21          bool SelectFlag = false;
+  22          bool AdjustFlag = false;        //      调节键标志
+  23          
+  24          unsigned char FlashCount1 = 0;  //      数码管闪烁计数,用于报警状态
+  25          unsigned char FlashCount2 = 0;  //      数码管闪烁计数,用于报警状态
+  26          unsigned char ErrorCount = 0;   //      错误计数
+  27          unsigned char PressCount = 0;   //      功能键按下次数
+  28          unsigned char NoAction_Count = 0;       //      用于进入工作状态计数
+  29          unsigned char ScrollPos = 0;            //      数码管轮播索引
+  30          unsigned char ScrollCounter = 0;        //      数码管轮播计数
+  31          unsigned char WorkTime = 0;
+  32          unsigned int  Lase_KeyCount = 0;        //      记录长按触发时的计数值
+  33          unsigned int xdata ScrollData[11][3] = {        //      数码管轮播数组
+  34                  {10,0,0},{11,1,1},{12,2,2},{13,3,3},{14,4,4},{15,5,5},
+  35                  {16,6,6},{17,7,7},{18,8,8},{19,9,9},{22,0,0}
+  36          };
+  37          
+  38          /**
+  39            * @Brief      待机模式
+  40            * @Param  None
+  41            * @Note   None
+  42            * @RetVal     None
+  43            */
+  44          void StandbyMode()
+  45          {
+  46   1              if(Sys_Mode == 1)
+  47   1              {
+  48   2                      if(PowerOnCount1 <= 49) PowerOnCount1 ++;
+  49   2                      else
+  50   2                      {
+  51   3                              PowerOnCount1 = 50;
+  52   3                              DigitalSet(10,0,0);
+  53   3                              LedSet(0,0x00);
+  54   3                              BuzzerSet(0,0,0);
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 2   
 
-  55          
-  56          /**
-  57            * @Brief      自检模式
-  58            * @Param  None
-  59            * @Note   None
-  60            * @RetVal     None
-  61            */
-  62          void CheckMode()
-  63          {
-  64   1              if(Sys_Mode != 3)
-  65   1              {
-  66   2                      PowerOnCount2 ++;
-  67   2                      if(PowerOnCount2 < 199)
-  68   2                      {
-  69   3                              if(KeyValue == 0x03)
-  70   3                              {
-  71   4                                      Sys_Mode = 2;   //      自检状态
-  72   4                                      if(KeyCount == 80 - 2)
-  73   4                                      {
-  74   5                                              BuzzerSet(2,100,100);
-  75   5                                              TriacSet(4,6,0,10);
-  76   5                                              DigitalSet(10,0,0);
-  77   5                                              Scroll_Flag = true;     //      开启数码管轮播
-  78   5                                      }
-  79   4                              }
-  80   3                      }
-  81   2                      else PowerOnCount2 = 200;       //      钳住，上电4秒内
-  82   2              
-  83   2                      if(Scroll_Flag)
-  84   2                      {
-  85   3                              ScrollCounter ++;
-  86   3                              if(ScrollCounter > 49)
-  87   3                              {
-  88   4                                      ScrollCounter = 0;
-  89   4                                      ScrollPos ++;
-  90   4                                      if(ScrollPos < 11)
-  91   4                                      {
-  92   5                                              DigitalSet(ScrollData[ScrollPos][0],
-  93   5                                                      ScrollData[ScrollPos][1],ScrollData[ScrollPos][2]);
-  94   5                                      }
-  95   4                                      else if(ScrollPos == 11)
-  96   4                                      {
-  97   5                                              DigitalSet(Temperature/10%10,Temperature%10+10,20);
-  98   5                                      }
-  99   4                                      else
- 100   4                                      {
- 101   5                                              ScrollPos = 0;
- 102   5                                              Sys_Mode = 1;   //      切换待机状态
- 103   5                                              Scroll_Flag = 0;        //      关闭轮播
- 104   5                                      }
- 105   4                              }
- 106   3                      }
- 107   2              }
- 108   1      }
- 109          
- 110          /**
- 111            * @Brief      报警状态
- 112            * @Param  None
- 113            * @Note   None
- 114            * @RetVal     None
- 115            */
- 116          void AlarmMode()
-C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 3   
+  55   3                              TriacSet(0,0,0,0);
+  56   3                              if(Last_KeyCode == 0x01)
+  57   3                              {
+  58   4                                      Sys_Mode = 4;
+  59   4                              }
+  60   3                      }
+  61   2              }
+  62   1      }
+  63          
+  64          /**
+  65            * @Brief      自检模式
+  66            * @Param  None
+  67            * @Note   None
+  68            * @RetVal     None
+  69            */
+  70          void CheckMode()
+  71          {
+  72   1              if(Sys_Mode != 3)       //      报警状态不能自检
+  73   1              {
+  74   2                      PowerOnCount2 ++;
+  75   2                      if(PowerOnCount2 < 199)
+  76   2                      {
+  77   3                              if(KeyValue == 0x03)
+  78   3                              {
+  79   4                                      if(KeyCount == 80 - 2)
+  80   4                                      {
+  81   5                                              Sys_Mode = 2;   //      自检状态
+  82   5                                              BuzzerSet(2,100,100);
+  83   5                                              TriacSet(4,6,0,10);
+  84   5                                              DigitalSet(10,0,0);
+  85   5                                              Scroll_Flag = true;     //      开启数码管轮播
+  86   5                                      }
+  87   4                              }
+  88   3                      }
+  89   2                      else PowerOnCount2 = 200;       //      钳住，上电4秒内
+  90   2              
+  91   2                      if(Scroll_Flag)
+  92   2                      {
+  93   3                              ScrollCounter ++;
+  94   3                              if(ScrollCounter > 49)
+  95   3                              {
+  96   4                                      ScrollCounter = 0;
+  97   4                                      ScrollPos ++;
+  98   4                                      if(ScrollPos < 11)
+  99   4                                      {
+ 100   5                                              DigitalSet(ScrollData[ScrollPos][0],
+ 101   5                                                      ScrollData[ScrollPos][1],ScrollData[ScrollPos][2]);
+ 102   5                                      }
+ 103   4                                      else if(ScrollPos == 11)
+ 104   4                                      {
+ 105   5                                              DigitalSet(Temperature/10%10,Temperature%10+10,20);
+ 106   5                                      }
+ 107   4                                      else
+ 108   4                                      {
+ 109   5                                              ScrollPos = 0;
+ 110   5                                              Sys_Mode = 1;           //      切换待机状态
+ 111   5                                              Scroll_Flag = 0;        //      关闭轮播
+ 112   5                                      }
+ 113   4                              }
+ 114   3                      }
+ 115   2              }
+ 116   1      }
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 3   
 
- 117          {
- 118   1              FlashCount ++;
- 119   1              if(FlashCount >= 50) FlashCount = 0;
- 120   1              
- 121   1              if(Buzzer_State != 1)
- 122   1              {
- 123   2                      if(AD_Value < 80 || //  短路195℃
- 124   2                              (NTCShort && AD_Value < (DryBoil?100:709)))     //      恢复过程
- 125   2                      {
- 126   3                              ErrorCount ++;
- 127   3                              if(ErrorCount > 25)
- 128   3                              {
- 129   4                                      ErrorCount = 0;
- 130   4                                      NTCShort = true;
- 131   4                                      Sys_Mode = 3;
- 132   4                                      
- 133   4                                      if(FlashCount < 25) DigitalSet(21,0,1); //      E01
- 134   4                                      else DigitalSet(23,23,23);
- 135   4                                      if(ErrorFlag)   //      下面操作只执行一次
- 136   4                                      {
- 137   5                                              ErrorFlag = false;
- 138   5                                              LedSet(0,0x00,0);
- 139   5                                              BuzzerSet(3,300,300);
- 140   5                                              TriacSet(0,0,0,0);
- 141   5                                      }
- 142   4                              }
- 143   3                      }
- 144   2                      else if((Sys_Mode == 5 && AD_Value < 100 && AD_Value > 80) //   工作干烧185℃
- 145   2                              || (DryBoil && AD_Value > 80 && AD_Value < 709))        //      恢复过程
- 146   2                      {
- 147   3                              ErrorCount ++;
- 148   3                              if(ErrorCount > 25)
- 149   3                              {
- 150   4                                      ErrorCount = 0;
- 151   4                                      DryBoil = true;
- 152   4                                      Sys_Mode = 3;
- 153   4                                      
- 154   4                                      if(FlashCount < 25) DigitalSet(21,0,0); //      E00
- 155   4                                      else DigitalSet(23,23,23);
- 156   4                                      if(ErrorFlag)
- 157   4                                      {
- 158   5                                              ErrorFlag = false;
- 159   5                                              LedSet(0,0x00,0);
- 160   5                                              BuzzerSet(3,300,300);
- 161   5                                              TriacSet(0,0,0,0);
- 162   5                                      }
- 163   4                              }
- 164   3                      }
- 165   2                      else if(AD_Value > 3965 || //开路-20℃
- 166   2                              (NTCOpen && AD_Value > 3530 && AD_Value < 3965))        //      恢复过程
- 167   2                      {
- 168   3                              ErrorCount ++;
- 169   3                              if(ErrorCount > 25)
- 170   3                              {
- 171   4                                      ErrorCount = 0;
- 172   4                                      NTCOpen = true;
- 173   4                                      Sys_Mode = 3;
- 174   4                                      
- 175   4                                      if(FlashCount < 25) DigitalSet(10,0,0); //      000
- 176   4                                      else if(FlashCount >= 25) DigitalSet(23,23,23);
- 177   4                                      if(ErrorFlag)
- 178   4                                      {
-C51 COMPILER V9.54   WORK                                                                  12/18/2024 18:51:41 PAGE 4   
+ 117          
+ 118          /**
+ 119            * @Brief      报警状态
+ 120            * @Param  None
+ 121            * @Note   None
+ 122            * @RetVal     None
+ 123            */
+ 124          void AlarmMode()
+ 125          {
+ 126   1              FlashCount1 ++;
+ 127   1              if(FlashCount1 >= 50) FlashCount1 = 0;
+ 128   1              
+ 129   1              if(Buzzer_State != 1)
+ 130   1              {
+ 131   2                      if(AD_Value < 80 || //  短路195℃
+ 132   2                              (NTCShort && AD_Value < (DryBoil?100:709)))     //      恢复过程
+ 133   2                      {
+ 134   3                              ErrorCount ++;
+ 135   3                              if(ErrorCount > 25)
+ 136   3                              {
+ 137   4                                      ErrorCount = 0;
+ 138   4                                      NTCShort = true;
+ 139   4                                      Sys_Mode = 3;
+ 140   4                                      
+ 141   4                                      if(FlashCount1 < 25) DigitalSet(21,0,1);        //      E01
+ 142   4                                      else DigitalSet(25,25,25);
+ 143   4                                      if(ErrorFlag)   //      下面操作只执行一次
+ 144   4                                      {
+ 145   5                                              ErrorFlag = false;
+ 146   5                                              LedSet(0,0x00);
+ 147   5                                              BuzzerSet(3,300,300);
+ 148   5                                              TriacSet(0,0,0,0);
+ 149   5                                      }
+ 150   4                              }
+ 151   3                      }
+ 152   2                      else if((Sys_Mode == 5 && AD_Value < 100 && AD_Value > 80) //   工作干烧185℃
+ 153   2                              || (DryBoil && AD_Value > 80 && AD_Value < 709))        //      恢复过程
+ 154   2                      {
+ 155   3                              ErrorCount ++;
+ 156   3                              if(ErrorCount > 25)
+ 157   3                              {
+ 158   4                                      ErrorCount = 0;
+ 159   4                                      DryBoil = true;
+ 160   4                                      Sys_Mode = 3;
+ 161   4                                      
+ 162   4                                      if(FlashCount1 < 25) DigitalSet(21,0,0);        //      E00
+ 163   4                                      else DigitalSet(25,25,25);
+ 164   4                                      if(ErrorFlag)
+ 165   4                                      {
+ 166   5                                              ErrorFlag = false;
+ 167   5                                              LedSet(0,0x00);
+ 168   5                                              BuzzerSet(3,300,300);
+ 169   5                                              TriacSet(0,0,0,0);
+ 170   5                                      }
+ 171   4                              }
+ 172   3                      }
+ 173   2                      else if(AD_Value > 3965 || //开路-20℃
+ 174   2                              (NTCOpen && AD_Value > 3530 && AD_Value < 3965))        //      恢复过程
+ 175   2                      {
+ 176   3                              ErrorCount ++;
+ 177   3                              if(ErrorCount > 25)
+ 178   3                              {
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 4   
 
- 179   5                                              ErrorFlag = false;
- 180   5                                              DigitalSet(10,0,0);
- 181   5                                              LedSet(0,0x00,0);
- 182   5                                              BuzzerSet(3,300,300);
- 183   5                                              TriacSet(0,0,0,0);
- 184   5                                      }
- 185   4                              }
- 186   3                      }
- 187   2                      else if(Sys_Mode == 3 && AD_Value > 709 && AD_Value < 3530)
- 188   2                      {
- 189   3                              NTCOpen = false;
- 190   3                              NTCShort = false;
- 191   3                              DryBoil = false;
- 192   3                              ErrorFlag = true;
- 193   3                              Sys_Mode = 1;   //      切换待机状态
+ 179   4                                      ErrorCount = 0;
+ 180   4                                      NTCOpen = true;
+ 181   4                                      Sys_Mode = 3;
+ 182   4                                      
+ 183   4                                      if(FlashCount1 < 25) DigitalSet(10,0,0);        //      000
+ 184   4                                      else if(FlashCount1 >= 25) DigitalSet(25,25,25);
+ 185   4                                      if(ErrorFlag)
+ 186   4                                      {
+ 187   5                                              ErrorFlag = false;
+ 188   5                                              DigitalSet(10,0,0);
+ 189   5                                              LedSet(0,0x00);
+ 190   5                                              BuzzerSet(3,300,300);
+ 191   5                                              TriacSet(0,0,0,0);
+ 192   5                                      }
+ 193   4                              }
  194   3                      }
- 195   2              }
- 196   1      }
- 197          
- 198          void SelectMode()
- 199          {
- 200   1              
- 201   1      }
- 202          
- 203          void WorkMode()
- 204          {
- 205   1              
- 206   1      }
+ 195   2                      else if(Sys_Mode == 3 && AD_Value > 709 && AD_Value < 3530)
+ 196   2                      {
+ 197   3                              NTCOpen = false;
+ 198   3                              NTCShort = false;
+ 199   3                              DryBoil = false;
+ 200   3                              ErrorFlag = true;
+ 201   3                              Sys_Mode = 1;   //      切换待机状态
+ 202   3                      }
+ 203   2              }
+ 204   1      }
+ 205          
+ 206          void SelectMode()
+ 207          {
+ 208   1              if(Sys_Mode == 4)
+ 209   1              {
+ 210   2                      NoAction_Count ++;      //      调节键松开不认为无操作
+ 211   2                      if(Last_KeyCode == 0x01)
+ 212   2                      {
+ 213   3                              Last_KeyCode = 0;
+ 214   3                              PressCount ++;
+ 215   3                              SelectFlag = true;
+ 216   3                              if(PressCount > 7) PressCount = 1;
+ 217   3                              BuzzerSet(1,100,100);
+ 218   3                      }
+ 219   2                      switch(PressCount)
+ 220   2                      {
+ 221   3                              case 1:
+ 222   3                                      if(SelectFlag)
+ 223   3                                      {
+ 224   4                                              NoAction_Count = 0;     //      重新计时
+ 225   4                                              SelectFlag = false;
+ 226   4                                              LedSet(1,0x01);
+ 227   4                                              DigitalSet(23,24,24);
+ 228   4                                      }
+ 229   3                                      if(NoAction_Count >= 250)
+ 230   3                                      {
+ 231   4                                              NoAction_Count = 0;
+ 232   4                                              LedSet(2,0x01);
+ 233   4                                              Sys_Mode = 5;
+ 234   4                                      }
+ 235   3                              break;
+ 236   3                              case 2:
+ 237   3                                      if(SelectFlag)
+ 238   3                                      {
+ 239   4                                              NoAction_Count = 0;
+ 240   4                                              SelectFlag = false;
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 5   
+
+ 241   4                                              LedSet(1,0x02);
+ 242   4                                              WorkTime = 5;
+ 243   4                                              DigitalSet(10,0,5);
+ 244   4                                      }
+ 245   3                                      if(NoAction_Count >= 250)       //      无操作进入工作状态
+ 246   3                                      {
+ 247   4                                              NoAction_Count = 0;
+ 248   4                                              LedSet(2,0x02);
+ 249   4                                              Sys_Mode = 5;
+ 250   4                                      }
+ 251   3                                      if(Last_KeyCode == 0x02)
+ 252   3                                      {
+ 253   4                                              Last_KeyCode = 0;
+ 254   4                                              NoAction_Count = 0;
+ 255   4                                              FlashCount2 = 0;        //      重新开始闪
+ 256   4                                              AdjustFlag = true;
+ 257   4                                              BuzzerSet(1,100,100);
+ 258   4                                              WorkTime += 1;
+ 259   4                                              if(WorkTime > 10) WorkTime = 1;
+ 260   4                                      }
+ 261   3                                      if(AdjustFlag)//        调节键松开再开始闪烁
+ 262   3                                      {
+ 263   4                                              FlashCount2 ++;
+ 264   4                                              if(FlashCount2 > 50) FlashCount2 = 0;
+ 265   4                                              if(FlashCount2 < 25) DigitalSet(10,WorkTime/10,WorkTime%10);
+ 266   4                                              else DigitalSet(25,25,25);
+ 267   4                                      }
+ 268   3                              break;
+ 269   3                              case 3:
+ 270   3                                      if(SelectFlag)
+ 271   3                                      {
+ 272   4                                              NoAction_Count = 0;
+ 273   4                                              SelectFlag = false;
+ 274   4                                              LedSet(1,0x04);
+ 275   4                                              WorkTime = 90;
+ 276   4                                              DigitalSet(11,3,0);
+ 277   4                                      }
+ 278   3                                      if(NoAction_Count >= 250)
+ 279   3                                      {
+ 280   4                                              NoAction_Count = 0;
+ 281   4                                              LedSet(2,0x04);
+ 282   4                                              Sys_Mode = 5;
+ 283   4                                      }
+ 284   3                                      if(Last_KeyCode == 0x02)
+ 285   3                                      {
+ 286   4                                              Last_KeyCode = 0;
+ 287   4                                              NoAction_Count = 0;
+ 288   4                                              FlashCount2 = 0;
+ 289   4                                              AdjustFlag = true;
+ 290   4                                              BuzzerSet(1,100,100);
+ 291   4                                              WorkTime += 5;
+ 292   4                                              if(WorkTime > 150) WorkTime = 60;
+ 293   4                                      }
+ 294   3                                      if(AdjustFlag)//        调节键松开再开始闪烁
+ 295   3                                      {
+ 296   4                                              FlashCount2 ++;
+ 297   4                                              if(FlashCount2 > 50) FlashCount2 = 0;
+ 298   4                                              if(FlashCount2 < 25) DigitalSet(10+WorkTime/60,WorkTime%60/10,WorkTime%60%10);
+ 299   4                                              else DigitalSet(25,25,25);
+ 300   4                                      }
+ 301   3                              break;
+ 302   3                              case 4:
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 6   
+
+ 303   3                                      if(SelectFlag)
+ 304   3                                      {
+ 305   4                                              NoAction_Count = 0;
+ 306   4                                              SelectFlag = false;
+ 307   4                                              LedSet(1,0x08);
+ 308   4                                              WorkTime = 60;
+ 309   4                                              DigitalSet(11,0,0);
+ 310   4                                      }
+ 311   3                                      if(NoAction_Count >= 250)
+ 312   3                                      {
+ 313   4                                              NoAction_Count = 0;
+ 314   4                                              LedSet(2,0x08);
+ 315   4                                              Sys_Mode = 5;
+ 316   4                                      }
+ 317   3                                      if(Last_KeyCode == 0x02)
+ 318   3                                      {
+ 319   4                                              Last_KeyCode = 0;
+ 320   4                                              NoAction_Count = 0;
+ 321   4                                              FlashCount2 = 0;
+ 322   4                                              AdjustFlag = true;
+ 323   4                                              BuzzerSet(1,100,100);
+ 324   4                                              WorkTime += 5;
+ 325   4                                              if(WorkTime > 120) WorkTime = 30;
+ 326   4                                      }
+ 327   3                                      if(AdjustFlag)//        调节键松开再开始闪烁
+ 328   3                                      {
+ 329   4                                              FlashCount2 ++;
+ 330   4                                              if(FlashCount2 > 50) FlashCount2 = 0;
+ 331   4                                              if(FlashCount2 < 25) DigitalSet(10+WorkTime/60,WorkTime%60/10,WorkTime%60%10);
+ 332   4                                              else DigitalSet(25,25,25);
+ 333   4                                      }
+ 334   3                              break;
+ 335   3                              case 5:
+ 336   3                                      if(SelectFlag)
+ 337   3                                      {
+ 338   4                                              NoAction_Count = 0;
+ 339   4                                              SelectFlag = false;
+ 340   4                                              LedSet(1,0x10);
+ 341   4                                              WorkTime = 90;
+ 342   4                                              DigitalSet(11,3,0);
+ 343   4                                      }
+ 344   3                                      if(NoAction_Count >= 250)
+ 345   3                                      {
+ 346   4                                              NoAction_Count = 0;
+ 347   4                                              LedSet(2,0x10);
+ 348   4                                              Sys_Mode = 5;
+ 349   4                                      }
+ 350   3                                      if(Last_KeyCode == 0x02)
+ 351   3                                      {
+ 352   4                                              Last_KeyCode = 0;
+ 353   4                                              NoAction_Count = 0;
+ 354   4                                              FlashCount2 = 0;
+ 355   4                                              AdjustFlag = true;
+ 356   4                                              BuzzerSet(1,100,100);
+ 357   4                                              WorkTime += 5;
+ 358   4                                              if(WorkTime > 120) WorkTime = 30;
+ 359   4                                      }
+ 360   3                                      if(AdjustFlag)//        调节键松开再开始闪烁
+ 361   3                                      {
+ 362   4                                              FlashCount2 ++;
+ 363   4                                              if(FlashCount2 > 50) FlashCount2 = 0;
+ 364   4                                              if(FlashCount2 < 25) DigitalSet(10+WorkTime/60,WorkTime%60/10,WorkTime%60%10);
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 7   
+
+ 365   4                                              else DigitalSet(25,25,25);
+ 366   4                                      }
+ 367   3                              break;
+ 368   3                              case 6:
+ 369   3                                      if(SelectFlag)
+ 370   3                                      {
+ 371   4                                              NoAction_Count = 0;
+ 372   4                                              SelectFlag = false;
+ 373   4                                              LedSet(1,0x20);
+ 374   4                                              WorkTime = 55;
+ 375   4                                              DigitalSet(5,15,20);
+ 376   4                                      }
+ 377   3                                      if(NoAction_Count >= 250)
+ 378   3                                      {
+ 379   4                                              NoAction_Count = 0;
+ 380   4                                              LedSet(2,0x20);
+ 381   4                                              Sys_Mode = 5;
+ 382   4                                      }
+ 383   3                                      if(KeyValue == 0x02)//  按下判断
+ 384   3                                      {
+ 385   4                                              if(KeyCount == 10 - 2)
+ 386   4                                              {
+ 387   5                                                      NoAction_Count = 0;
+ 388   5                                                      FlashCount2 = 0;
+ 389   5                                                      AdjustFlag = true;
+ 390   5                                                      BuzzerSet(1,100,100);
+ 391   5                                                      WorkTime += 5 ; 
+ 392   5                                                      if(WorkTime > 90) WorkTime = 40;
+ 393   5                                              }
+ 394   4                                              if(KeyCount > 50 - 2)   //      长按
+ 395   4                                              {
+ 396   5                                                      KeyCount = 35;//        每超过48-35=13=260毫秒加一个5
+ 397   5                                                      NoAction_Count = 0;
+ 398   5                                                      FlashCount2 = 0;
+ 399   5                                                      AdjustFlag = true;
+ 400   5                                                      WorkTime += 5 ; 
+ 401   5                                                      if(WorkTime > 90) WorkTime = 40;
+ 402   5                                              }
+ 403   4                                      }
+ 404   3                                      if(AdjustFlag)//        调节键松开再开始闪烁
+ 405   3                                      {
+ 406   4                                              FlashCount2 ++;
+ 407   4                                              if(FlashCount2 > 50) FlashCount2 = 0;
+ 408   4                                              if(FlashCount2 < 25) DigitalSet(WorkTime/10%10,WorkTime%10+10,20);
+ 409   4                                              else DigitalSet(25,25,25);
+ 410   4                                      }
+ 411   3                              break;
+ 412   3                              case 7:
+ 413   3                                      if(SelectFlag)
+ 414   3                                      {
+ 415   4                                              NoAction_Count = 0;
+ 416   4                                              SelectFlag = false;
+ 417   4                                              LedSet(0,0);
+ 418   4                                              DigitalSet(10,0,0);
+ 419   4                                      }
+ 420   3                                      if(NoAction_Count >= 250)
+ 421   3                                      {
+ 422   4                                              NoAction_Count = 0;
+ 423   4                                              Sys_Mode = 1;
+ 424   4                                      }
+ 425   3                              break;
+ 426   3                      }
+C51 COMPILER V9.54   WORK                                                                  12/20/2024 09:37:13 PAGE 8   
+
+ 427   2              }
+ 428   1      }
+ 429          
+ 430          void WorkMode()
+ 431          {
+ 432   1              if(Sys_Mode == 5)
+ 433   1              {
+ 434   2                      DigitalSet(Temperature/10%10,Temperature%10+10,20);
+ 435   2              }
+ 436   1              
+ 437   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    657    ----
+   CODE SIZE        =   1716    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     66    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     13    ----
+   DATA SIZE        =     20    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
    EDATA SIZE       =   ----    ----

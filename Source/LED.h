@@ -14,9 +14,8 @@
 
 extern unsigned char 	LED_State;
 extern unsigned int 	LED_Value;
-extern unsigned int 	LED_Time;
 
-void Led_Display(unsigned char State,unsigned int Value,unsigned int Time);
-void LedSet(unsigned char State,unsigned int Value,unsigned int Time);
+void Led_Display(unsigned char State,unsigned int Value);
+void LedSet(unsigned char State,unsigned int Value);
 
 #endif

@@ -25,8 +25,8 @@ void main()
 	Timer0_Init();
 	InitKey();
 	BuzzerSet(1,1000,300);
-	LedSet(2,0x7f,1000);
-	DigitalSet(24,24,24);
+	LedSet(2,0x7f);
+	DigitalSet(26,26,26);
 	while(1)
 	{
 		RSTSTAT = 0x02;
@@ -68,7 +68,7 @@ void main()
 					CheckMode();	//	×Ô¼ì×´Ì¬
 				break;
 					
-				case 6:	
+				case 6:
 					AlarmMode();	//	±¨¾¯×´Ì¬
 				break;
 				
@@ -112,7 +112,7 @@ void timer0() interrupt 1
 	Flag = !Flag;
 	if(!Flag)
 	{
-		Led_Display(LED_State,LED_Value,LED_Time);
+		Led_Display(LED_State,LED_Value);
 	}
 	else
 	{
